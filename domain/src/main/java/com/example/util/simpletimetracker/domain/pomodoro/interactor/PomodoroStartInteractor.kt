@@ -12,6 +12,10 @@ class PomodoroStartInteractor @Inject constructor(
     suspend fun start() {
         val current = System.currentTimeMillis()
         prefsInteractor.setPomodoroModeStartedTimestampMs(current)
+        // New pomodoro is a new entry.
+        prefsInteractor.setPomodoroEntryStartedTimestampMs(current)
+        prefsInteractor.setPomodoroPauseTotalMs(0)
+        prefsInteractor.setPomodoroResumeTypeId(0)
         pomodoroCycleNotificationInteractor.checkAndReschedule()
     }
 

@@ -30,6 +30,9 @@ class PomodoroPauseInteractor @Inject constructor(
         val newTimeStarted = timeStartedMs + current - timePausedMs
         prefsInteractor.setPomodoroModeStartedTimestampMs(newTimeStarted)
         prefsInteractor.setPomodoroModePausedTimestampMs(0)
+        // Entry keeps running while paused, so pause time is accumulated separately.
+        val pauseTotalMs = prefsInteractor.getPomodoroPauseTotalMs()
+        prefsInteractor.setPomodoroPauseTotalMs(pauseTotalMs + (current - timePausedMs).coerceAtLeast(0L))
         pomodoroCycleNotificationInteractor.checkAndReschedule()
     }
 }

@@ -312,7 +312,11 @@
         android:id="@+id/pomodoroFragment"
         android:name="com.example.util.simpletimetracker.feature_pomodoro.timer.view.PomodoroFragment"
         android:label="PomodoroFragment"
-        tools:layout="@layout/pomodoro_fragment" />
+        tools:layout="@layout/pomodoro_fragment">
+        <action
+            android:id="@+id/action_pomodoroFragment_to_changeRunningRecordFragment"
+            app:destination="@id/changeRunningRecordFragment" />
+    </fragment>
     <dialog
         android:id="@+id/dateTimeDialog"
         android:name="com.example.util.simpletimetracker.feature_dialogs.dateTime.DateTimeDialogFragment"

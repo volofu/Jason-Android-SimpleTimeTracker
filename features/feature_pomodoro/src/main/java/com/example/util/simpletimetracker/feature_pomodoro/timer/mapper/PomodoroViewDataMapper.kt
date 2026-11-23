@@ -58,11 +58,22 @@ class PomodoroViewDataMapper @Inject constructor(
         timePausedMs: Long,
         timerUpdateMs: Long,
         settings: PomodoroCycleSettings,
+        // Not null if a pause activity is running: pomodoro is paused and an infinite timer is shown.
+        pauseElapsedMs: Long? = null,
     ): PomodoroTimerState {
         // Min increment of one pixel.
         val maxProgress = 1024 * Math.PI
         val isStarted = state !is GetPomodoroStateInteractor.State.Stopped
         val isPaused = state is GetPomodoroStateInteractor.State.Paused
+
+        if (isPaused && pauseElapsedMs != null) {
+            return mapPauseTimerState(
+                elapsedMs = pauseElapsedMs,
+                settings = settings,
+                maxProgress = maxProgress.toInt(),
+                timerUpdateMs = timerUpdateMs,
+            )
+        }
 
         return if (isStarted) {
             val timerUpdate = if (isPaused) 0 else timerUpdateMs
@@ -128,6 +139,13 @@ class PomodoroViewDataMapper @Inject constructor(
             resourceRepo.getString(R.string.pomodoro_info_not_running)
         }
 
+        val pausedActivity = info.pausedActivity?.let {
+            val name = it.name.ifEmpty { resourceRepo.getString(R.string.pomodoro_info_no_activity) }
+            val comment = it.comment.trim()
+            val text = if (comment.isEmpty()) name else "$name  \u00B7  $comment"
+            resourceRepo.getString(R.string.pomodoro_info_paused_task, text)
+        }.orEmpty()
+
         return PomodoroInfoState(
             activityName = typeName,
             comment = if (hasComment) {
@@ -136,12 +154,26 @@ class PomodoroViewDataMapper @Inject constructor(
                 resourceRepo.getString(R.string.pomodoro_info_no_comment)
             },
             isCommentPlaceholder = !hasComment,
+            pausedActivity = pausedActivity,
             entryTimes = entryTimes,
+            editButtonVisible = activity?.isRunning == true,
             typeLabel = if (hasActivity) typeName else "-",
             typeToday = formatDuration(info.typeTodayMs),
             typeWeek = formatDuration(info.typeWeekMs),
             allToday = formatDurationWithTotal(info.allTodayMs, info.dayWindowMs),
             allWeek = formatDurationWithTotal(info.allWeekMs, info.weekWindowMs),
+            ratioToday = mapRatio(info.allTodayMs, info.dayWindowMs),
+            ratioWeek = mapRatio(info.allWeekMs, info.weekWindowMs),
+        )
+    }
+
+    private fun mapRatio(workedMs: Long, windowMs: Long): PomodoroInfoState.Ratio {
+        if (windowMs <= 0L) return PomodoroInfoState.Ratio(text = "-", fraction = 0f)
+        val ratio = workedMs.coerceAtLeast(0L).toDouble() / windowMs
+        return PomodoroInfoState.Ratio(
+            text = "${Math.round(ratio * 100)}%",
+            // Tracking outside of working hours can exceed 100%, but chart can't.
+            fraction = ratio.coerceIn(0.0, 1.0).toFloat(),
         )
     }
 
@@ -167,6 +199,30 @@ class PomodoroViewDataMapper @Inject constructor(
     // 3h 10m / 6h 10m
     private fun formatDurationWithTotal(durationMs: Long, totalMs: Long): String {
         return "${formatDuration(durationMs)} / ${formatDuration(totalMs)}"
+    }
+
+    // Time on a pause activity is not limited, but the focus time is a reference
+    // for how long is too long: ring fills and background turns from white to red.
+    private fun mapPauseTimerState(
+        elapsedMs: Long,
+        settings: PomodoroCycleSettings,
+        maxProgress: Int,
+        timerUpdateMs: Long,
+    ): PomodoroTimerState {
+        val elapsed = elapsedMs.coerceAtLeast(0L)
+        val fraction = if (settings.focusTimeMs > 0L) {
+            (elapsed.toDouble() / settings.focusTimeMs).coerceIn(0.0, 1.0).toFloat()
+        } else {
+            1f
+        }
+        return PomodoroTimerState(
+            maxProgress = maxProgress,
+            progress = (fraction * maxProgress).toInt(),
+            timerUpdateMs = timerUpdateMs,
+            durationState = mapToDurationState(formatInterval(elapsed)),
+            currentCycleHint = resourceRepo.getString(R.string.pomodoro_info_pause),
+            pauseBackgroundFraction = fraction,
+        )
     }
 
     private fun mapToDurationState(

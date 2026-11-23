@@ -488,6 +488,54 @@ class PrefsInteractor @Inject constructor(
         prefsRepo.pomodoroShowMoreControls = value
     }
 
+    suspend fun getPomodoroWorkSchedule(): String = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroWorkSchedule
+    }
+
+    suspend fun setPomodoroWorkSchedule(value: String) = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroWorkSchedule = value
+    }
+
+    suspend fun getPomodoroEntryStartedTimestampMs(): Long = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroEntryStartedTimestamp
+    }
+
+    suspend fun setPomodoroEntryStartedTimestampMs(value: Long) = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroEntryStartedTimestamp = value
+    }
+
+    suspend fun getPomodoroPauseTotalMs(): Long = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroPauseTotal
+    }
+
+    suspend fun setPomodoroPauseTotalMs(value: Long) = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroPauseTotal = value
+    }
+
+    suspend fun getPomodoroResumeTypeId(): Long = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroResumeTypeId
+    }
+
+    suspend fun setPomodoroResumeTypeId(value: Long) = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroResumeTypeId = value
+    }
+
+    suspend fun getPomodoroResumeComment(): String = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroResumeComment
+    }
+
+    suspend fun setPomodoroResumeComment(value: String) = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroResumeComment = value
+    }
+
+    suspend fun getPomodoroResumeTags(): String = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroResumeTags
+    }
+
+    suspend fun setPomodoroResumeTags(value: String) = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroResumeTags = value
+    }
+
     suspend fun getAllowMultipleActivityFilters(): Boolean = withContext(Dispatchers.IO) {
         prefsRepo.allowMultipleActivityFilters
     }

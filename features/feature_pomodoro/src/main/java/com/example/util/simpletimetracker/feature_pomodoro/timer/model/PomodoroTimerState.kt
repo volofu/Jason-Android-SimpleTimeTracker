@@ -6,6 +6,8 @@ data class PomodoroTimerState(
     val timerUpdateMs: Long,
     val durationState: DurationState,
     val currentCycleHint: String,
+    // Not null in pause mode: 0 - white, 1 - red.
+    val pauseBackgroundFraction: Float? = null,
 ) {
 
     data class DurationState(

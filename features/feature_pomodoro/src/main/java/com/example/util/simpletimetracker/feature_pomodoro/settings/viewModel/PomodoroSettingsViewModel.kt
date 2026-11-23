@@ -7,16 +7,22 @@ import com.example.util.simpletimetracker.core.extension.lazySuspend
 import com.example.util.simpletimetracker.core.extension.set
 import com.example.util.simpletimetracker.feature_settings.api.SettingsBlock
 import com.example.util.simpletimetracker.domain.pomodoro.interactor.PomodoroCycleNotificationInteractor
+import com.example.util.simpletimetracker.domain.pomodoro.mapper.PomodoroWorkScheduleMapper
+import com.example.util.simpletimetracker.domain.pomodoro.model.PomodoroWorkSchedule
 import com.example.util.simpletimetracker.domain.prefs.interactor.PrefsInteractor
 import com.example.util.simpletimetracker.feature_base_adapter.ViewHolderType
 import com.example.util.simpletimetracker.feature_base_adapter.hintBig.HintBigViewData
 import com.example.util.simpletimetracker.feature_pomodoro.settings.interactor.PomodoroSettingsViewDataInteractor
 import com.example.util.simpletimetracker.feature_pomodoro.settings.model.PomodoroHintButtonType
+import com.example.util.simpletimetracker.feature_pomodoro.settings.model.PomodoroScheduleItem
 import com.example.util.simpletimetracker.navigation.Router
 import com.example.util.simpletimetracker.navigation.params.action.OpenSystemSettings
+import com.example.util.simpletimetracker.navigation.params.screen.DateTimeDialogParams
+import com.example.util.simpletimetracker.navigation.params.screen.DateTimeDialogType
 import com.example.util.simpletimetracker.navigation.params.screen.DurationDialogParams
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import java.util.Calendar
 import javax.inject.Inject
 
 @HiltViewModel
@@ -25,6 +31,7 @@ class PomodoroSettingsViewModel @Inject constructor(
     private val prefsInteractor: PrefsInteractor,
     private val pomodoroSettingsViewDataInteractor: PomodoroSettingsViewDataInteractor,
     private val pomodoroCycleNotificationInteractor: PomodoroCycleNotificationInteractor,
+    private val pomodoroWorkScheduleMapper: PomodoroWorkScheduleMapper,
 ) : BaseViewModel() {
 
     val content: LiveData<List<ViewHolderType>> by lazySuspend { loadContent() }
@@ -57,9 +64,30 @@ class PomodoroSettingsViewModel @Inject constructor(
             SettingsBlock.PomodoroShowMoreControls ->
                 onShowMoreControlsClicked()
             else -> {
-                // Do nothing.
+                PomodoroScheduleItem.all.firstOrNull { block == it.startBlock || block == it.endBlock }
+                    ?.let { onScheduleClicked(it, isStart = block == it.startBlock) }
             }
         }
+    }
+
+    fun onDateTimeSet(timestamp: Long, tag: String?) = viewModelScope.launch {
+        val parts = tag?.split(SCHEDULE_TAG_DELIMITER)
+        if (parts?.getOrNull(0) != SCHEDULE_TAG_PREFIX) return@launch
+        val item = PomodoroScheduleItem.all.firstOrNull { it.key == parts?.getOrNull(1) } ?: return@launch
+        val isStart = parts?.getOrNull(2) == SCHEDULE_TAG_START
+
+        val minute = Calendar.getInstance().run {
+            timeInMillis = timestamp
+            get(Calendar.HOUR_OF_DAY) * 60 + get(Calendar.MINUTE)
+        }
+        var schedule = loadSchedule()
+        item.days.forEach { day ->
+            val window = schedule.get(day)
+            val newWindow = if (isStart) window.copy(startMinute = minute) else window.copy(endMinute = minute)
+            schedule = schedule.with(day, newWindow)
+        }
+        prefsInteractor.setPomodoroWorkSchedule(pomodoroWorkScheduleMapper.toString(schedule))
+        updateContent()
     }
 
     @Suppress("UNUSED_PARAMETER")
@@ -145,6 +173,36 @@ class PomodoroSettingsViewModel @Inject constructor(
         ).let(router::navigate)
     }
 
+    private fun onScheduleClicked(
+        item: PomodoroScheduleItem,
+        isStart: Boolean,
+    ) = viewModelScope.launch {
+        val window = loadSchedule().get(item.days.first())
+        val minute = if (isStart) window.startMinute else window.endMinute
+        val timestamp = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            add(Calendar.MINUTE, minute)
+        }.timeInMillis
+        DateTimeDialogParams(
+            tag = listOf(
+                SCHEDULE_TAG_PREFIX,
+                item.key,
+                if (isStart) SCHEDULE_TAG_START else SCHEDULE_TAG_END,
+            ).joinToString(SCHEDULE_TAG_DELIMITER),
+            type = DateTimeDialogType.TIME,
+            timestamp = timestamp,
+            useMilitaryTime = prefsInteractor.getUseMilitaryTimeFormat(),
+        ).let(router::navigate)
+    }
+
+    private suspend fun loadSchedule(): PomodoroWorkSchedule {
+        return prefsInteractor.getPomodoroWorkSchedule()
+            .let(pomodoroWorkScheduleMapper::fromString)
+    }
+
     private fun onShowMoreControlsClicked() = viewModelScope.launch {
         val newValue = !prefsInteractor.getPomodoroShowMoreControls()
         prefsInteractor.setPomodoroShowMoreControls(newValue)
@@ -164,5 +222,9 @@ class PomodoroSettingsViewModel @Inject constructor(
         const val BREAK_TIME_DURATION_DIALOG_TAG = "BREAK_TIME_DURATION_DIALOG_TAG"
         const val LONG_BREAK_TIME_DURATION_DIALOG_TAG = "LONG_BREAK_TIME_DURATION_DIALOG_TAG"
         const val PERIODS_UNTIL_LONG_BREAK_DIALOG_TAG = "PERIODS_UNTIL_LONG_BREAK_DIALOG_TAG"
+        private const val SCHEDULE_TAG_PREFIX = "POMODORO_SCHEDULE"
+        private const val SCHEDULE_TAG_DELIMITER = "|"
+        private const val SCHEDULE_TAG_START = "START"
+        private const val SCHEDULE_TAG_END = "END"
     }
 }

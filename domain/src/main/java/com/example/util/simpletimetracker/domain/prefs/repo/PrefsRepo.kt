@@ -98,6 +98,24 @@ interface PrefsRepo {
 
     var pomodoroShowMoreControls: Boolean
 
+    // Working hours per day of week, used for pomodoro statistics.
+    // Format: "startMin-endMin" for every day, Sunday first, joined by ",". Empty - default.
+    var pomodoroWorkSchedule: String
+
+    // Start of the current pomodoro entry. Unlike started timestamp it is not shifted by pauses.
+    var pomodoroEntryStartedTimestamp: Long // in milliseconds, 0 - disabled
+
+    // Total time of pauses in the current pomodoro entry, not including current one.
+    var pomodoroPauseTotal: Long // in milliseconds
+
+    // Activity that was paused and should be resumed on play.
+    var pomodoroResumeTypeId: Long // 0 - none
+
+    var pomodoroResumeComment: String
+
+    // Format: "tagId:numericValue" joined by ",", value can be empty.
+    var pomodoroResumeTags: String
+
     var showGoalsSeparately: Boolean
 
     var hideFinishedGoals: Boolean

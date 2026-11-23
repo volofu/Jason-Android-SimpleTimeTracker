@@ -695,6 +695,13 @@ Example:<br/>
     <string name="pomodoro_info_today">Today</string>
     <string name="pomodoro_info_week">Week</string>
     <string name="pomodoro_info_all_activities">All activities</string>
+    <string name="pomodoro_info_work_ratio">Worked vs. work hours</string>
+    <string name="pomodoro_info_paused_task">Paused: %1$s</string>
+    <string name="pomodoro_info_edit_entry">Comment / tags</string>
+    <string name="pomodoro_settings_work_hours_weekdays">Work hours: weekdays</string>
+    <string name="pomodoro_settings_work_hours_weekend">Work hours: weekend</string>
+    <string name="pomodoro_settings_work_hours_day">Work hours: %1$s</string>
+    <string name="pomodoro_settings_work_hours_mixed">...</string>
     <string name="pomodoro_settings_periods_until_long_break">Periods until long break</string>
     <string name="pomodoro_settings_show_more_controls">Show more controls</string>
 

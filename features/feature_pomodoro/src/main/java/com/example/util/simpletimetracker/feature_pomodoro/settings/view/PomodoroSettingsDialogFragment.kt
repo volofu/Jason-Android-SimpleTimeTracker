@@ -4,6 +4,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import com.example.util.simpletimetracker.core.base.BaseBottomSheetFragment
+import com.example.util.simpletimetracker.feature_dialogs.api.DateTimeDialogListener
 import com.example.util.simpletimetracker.feature_dialogs.api.DurationDialogListener
 import com.example.util.simpletimetracker.core.extension.blockContentScroll
 import com.example.util.simpletimetracker.core.extension.setSkipCollapsed
@@ -17,7 +18,8 @@ import com.example.util.simpletimetracker.feature_pomodoro.databinding.PomodoroS
 @AndroidEntryPoint
 class PomodoroSettingsDialogFragment :
     BaseBottomSheetFragment<Binding>(),
-    DurationDialogListener {
+    DurationDialogListener,
+    DateTimeDialogListener {
 
     override val inflater: (LayoutInflater, ViewGroup?, Boolean) -> Binding =
         Binding::inflate
@@ -61,6 +63,10 @@ class PomodoroSettingsDialogFragment :
 
     override fun onCountSet(count: Long, tag: String?) {
         viewModel.onCountSet(tag, count)
+    }
+
+    override fun onDateTimeSet(timestamp: Long, tag: String?) {
+        viewModel.onDateTimeSet(timestamp, tag)
     }
 
     override fun onDisable(tag: String?) {

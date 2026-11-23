@@ -252,6 +252,30 @@ class PrefsRepoImpl @Inject constructor(
         KEY_POMODORO_SHOW_MORE_CONTROLS, false,
     )
 
+    override var pomodoroWorkSchedule: String by prefs.delegate(
+        KEY_POMODORO_WORK_SCHEDULE, "",
+    )
+
+    override var pomodoroEntryStartedTimestamp: Long by prefs.delegate(
+        KEY_POMODORO_ENTRY_STARTED_TIMESTAMP, 0,
+    )
+
+    override var pomodoroPauseTotal: Long by prefs.delegate(
+        KEY_POMODORO_PAUSE_TOTAL, 0,
+    )
+
+    override var pomodoroResumeTypeId: Long by prefs.delegate(
+        KEY_POMODORO_RESUME_TYPE_ID, 0,
+    )
+
+    override var pomodoroResumeComment: String by prefs.delegate(
+        KEY_POMODORO_RESUME_COMMENT, "",
+    )
+
+    override var pomodoroResumeTags: String by prefs.delegate(
+        KEY_POMODORO_RESUME_TAGS, "",
+    )
+
     override var showGoalsSeparately: Boolean by prefs.delegate(
         KEY_SHOW_GOALS_SEPARATELY, false,
     )
@@ -731,6 +755,7 @@ class PrefsRepoImpl @Inject constructor(
             remove(KEY_POMODORO_LONG_BREAK_TIME)
             remove(KEY_POMODORO_PERIODS_UNTIL_LONG_BREAK)
             remove(KEY_POMODORO_SHOW_MORE_CONTROLS)
+            remove(KEY_POMODORO_WORK_SCHEDULE)
         }
     }
 
@@ -815,6 +840,7 @@ class PrefsRepoImpl @Inject constructor(
         const val KEY_POMODORO_LONG_BREAK_TIME = "pomodoroLongBreakTime"
         const val KEY_POMODORO_PERIODS_UNTIL_LONG_BREAK = "pomodoroPeriodsUntilLongBreak"
         const val KEY_POMODORO_SHOW_MORE_CONTROLS = "pomodoroShowMoreControls"
+        const val KEY_POMODORO_WORK_SCHEDULE = "pomodoroWorkSchedule"
         const val KEY_ALLOW_MULTIPLE_ACTIVITY_FILTERS = "allowMultipleActivityFilters"
         const val KEY_SHOW_CATEGORIES_AS_PREDEFINED_FILTERS = "showCategoriesAsPredefinedFilters"
         const val KEY_SELECTED_PREDEFINED_FILTERS = "selectedPredefinedFilters"
@@ -892,6 +918,11 @@ class PrefsRepoImpl @Inject constructor(
         private const val KEY_AUTOMATIC_EXPORT_INTERVAL = "automaticExportInterval"
         private const val KEY_POMODORO_MODE_STARTED_TIMESTAMP = "pomodoroModeStartedTimestamp"
         private const val KEY_POMODORO_MODE_PAUSED_TIMESTAMP = "pomodoroModePausedTimestamp"
+        private const val KEY_POMODORO_ENTRY_STARTED_TIMESTAMP = "pomodoroEntryStartedTimestamp"
+        private const val KEY_POMODORO_PAUSE_TOTAL = "pomodoroPauseTotal"
+        private const val KEY_POMODORO_RESUME_TYPE_ID = "pomodoroResumeTypeId"
+        private const val KEY_POMODORO_RESUME_COMMENT = "pomodoroResumeComment"
+        private const val KEY_POMODORO_RESUME_TAGS = "pomodoroResumeTags"
         private const val KEY_WIDGET = "widget_"
         private const val KEY_STATISTICS_WIDGET_FILTERED_TYPES = "statistics_widget_filtered_types_"
         private const val KEY_STATISTICS_WIDGET_FILTERED_CATEGORIES = "statistics_widget_filtered_categories_"

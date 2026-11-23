@@ -1,13 +1,15 @@
 package com.example.util.simpletimetracker.domain.pomodoro.mapper
 
+import com.example.util.simpletimetracker.domain.daysOfWeek.model.DayOfWeek
+import com.example.util.simpletimetracker.domain.pomodoro.model.PomodoroWorkSchedule
 import com.example.util.simpletimetracker.domain.record.model.Range
 import java.util.Calendar
 import java.util.TimeZone
 import javax.inject.Inject
 
 /**
- * Calculates how much of the daily working window (by default 9:00 - 19:00)
- * has already passed within a range (a day or a week).
+ * Calculates how much of the working hours from the schedule has already passed
+ * within a range (a day or a week).
  */
 class PomodoroWorkWindowMapper @Inject constructor() {
 
@@ -15,11 +17,10 @@ class PomodoroWorkWindowMapper @Inject constructor() {
         range: Range,
         nowMs: Long,
         startOfDayShiftMs: Long,
+        schedule: PomodoroWorkSchedule,
         timeZone: TimeZone = TimeZone.getDefault(),
-        windowStartHour: Int = DEFAULT_WINDOW_START_HOUR,
-        windowEndHour: Int = DEFAULT_WINDOW_END_HOUR,
     ): Long {
-        if (range.isUndefined || windowEndHour <= windowStartHour) return 0L
+        if (range.isUndefined) return 0L
 
         // Calendar date of the first day in the range.
         val calendar = Calendar.getInstance(timeZone).apply {
@@ -33,25 +34,35 @@ class PomodoroWorkWindowMapper @Inject constructor() {
         var result = 0L
         var days = 0
         while (days < MAX_DAYS) {
-            val windowStart = calendar.getHour(windowStartHour)
-            if (windowStart >= range.timeEnded || windowStart >= nowMs) break
-            val windowEnd = calendar.getHour(windowEndHour)
-            result += minOf(nowMs, windowEnd) - windowStart
+            // Calendar is at the start of the calendar date, actual day starts after the shift.
+            val dayStart = calendar.timeInMillis + startOfDayShiftMs
+            if (dayStart >= range.timeEnded || dayStart >= nowMs) break
+
+            val window = schedule.get(calendar.getDayOfWeek())
+            if (window.endMinute > window.startMinute) {
+                val windowStart = calendar.getMinute(window.startMinute)
+                val windowEnd = calendar.getMinute(window.endMinute)
+                result += (minOf(nowMs, windowEnd) - windowStart).coerceAtLeast(0L)
+            }
             calendar.add(Calendar.DATE, 1)
             days++
         }
         return result
     }
 
-    private fun Calendar.getHour(hour: Int): Long {
+    private fun Calendar.getDayOfWeek(): DayOfWeek {
+        // Calendar.SUNDAY is 1.
+        return DayOfWeek.entries[get(Calendar.DAY_OF_WEEK) - 1]
+    }
+
+    private fun Calendar.getMinute(minuteOfDay: Int): Long {
         val copy = clone() as Calendar
-        copy.set(Calendar.HOUR_OF_DAY, hour)
+        copy.set(Calendar.HOUR_OF_DAY, minuteOfDay / 60)
+        copy.set(Calendar.MINUTE, minuteOfDay % 60)
         return copy.timeInMillis
     }
 
     companion object {
-        const val DEFAULT_WINDOW_START_HOUR = 9
-        const val DEFAULT_WINDOW_END_HOUR = 19
         private const val MAX_DAYS = 366
     }
 }

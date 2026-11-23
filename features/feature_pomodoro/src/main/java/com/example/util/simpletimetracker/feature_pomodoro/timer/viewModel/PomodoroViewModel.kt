@@ -5,18 +5,17 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.util.simpletimetracker.core.base.BaseViewModel
 import com.example.util.simpletimetracker.core.extension.set
-import com.example.util.simpletimetracker.core.extension.toParams
 import com.example.util.simpletimetracker.core.repo.ResourceRepo
 import com.example.util.simpletimetracker.domain.record.interactor.AddRunningRecordMediator
 import com.example.util.simpletimetracker.domain.record.interactor.RecordInteractor
 import com.example.util.simpletimetracker.domain.record.interactor.RemoveRunningRecordMediator
 import com.example.util.simpletimetracker.domain.record.interactor.RunningRecordInteractor
-import com.example.util.simpletimetracker.domain.record.model.RecordBase
-import com.example.util.simpletimetracker.domain.record.model.RecordDataSelectionDialogResult
+import com.example.util.simpletimetracker.domain.record.model.RunningRecord
 import com.example.util.simpletimetracker.domain.pomodoro.interactor.GetPomodoroSettingsInteractor
 import com.example.util.simpletimetracker.domain.pomodoro.interactor.GetPomodoroStateInteractor
 import com.example.util.simpletimetracker.domain.pomodoro.interactor.PomodoroNextCycleInteractor
 import com.example.util.simpletimetracker.domain.pomodoro.interactor.PomodoroPauseInteractor
+import com.example.util.simpletimetracker.domain.pomodoro.interactor.PomodoroResumeTargetInteractor
 import com.example.util.simpletimetracker.domain.pomodoro.interactor.PomodoroRestartCycleInteractor
 import com.example.util.simpletimetracker.domain.prefs.interactor.PrefsInteractor
 import com.example.util.simpletimetracker.domain.pomodoro.interactor.PomodoroStartInteractor
@@ -28,8 +27,9 @@ import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroB
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroInfoState
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroTimerState
 import com.example.util.simpletimetracker.navigation.Router
+import com.example.util.simpletimetracker.navigation.params.screen.ChangeRunningRecordFromPomodoroParams
+import com.example.util.simpletimetracker.navigation.params.screen.ChangeRunningRecordParams
 import com.example.util.simpletimetracker.navigation.params.screen.PomodoroSettingsParams
-import com.example.util.simpletimetracker.navigation.params.screen.RecordTagSelectionParams
 import com.example.util.simpletimetracker.navigation.params.screen.TypesSelectionDialogParams
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -56,6 +56,7 @@ class PomodoroViewModel @Inject constructor(
     private val recordInteractor: RecordInteractor,
     private val addRunningRecordMediator: AddRunningRecordMediator,
     private val removeRunningRecordMediator: RemoveRunningRecordMediator,
+    private val pomodoroResumeTargetInteractor: PomodoroResumeTargetInteractor,
 ) : BaseViewModel() {
 
     val buttonState: LiveData<PomodoroButtonState> = MutableLiveData()
@@ -65,8 +66,8 @@ class PomodoroViewModel @Inject constructor(
     private var timerJob: Job? = null
     private var infoJob: Job? = null
 
-    // Activity is waiting for tag/comment selection, pomodoro should be resumed when it is started.
-    private var resumeAfterTagSelection: Boolean = false
+    // Not null if pomodoro is paused and a pause activity is running.
+    private var pauseActivityStartedMs: Long? = null
 
     fun onVisible() {
         startUpdate()
@@ -86,7 +87,7 @@ class PomodoroViewModel @Inject constructor(
         when (state) {
             is GetPomodoroStateInteractor.State.Running -> pomodoroStopInteractor.stop()
             is GetPomodoroStateInteractor.State.Paused -> {
-                resumeLastActivityIfNoneRunning()
+                resumeAfterPause()
                 pomodoroPauseInteractor.startAfterPause()
             }
             is GetPomodoroStateInteractor.State.Stopped -> {
@@ -109,35 +110,54 @@ class PomodoroViewModel @Inject constructor(
     }
 
     // Pause means that current activity is not being focused on anymore:
-    // stop it (so that the time is not tracked) and ask what to do next.
+    // stop it (so that the time is not tracked as work) and ask what to do during the pause.
     fun onPauseClicked() = viewModelScope.launch {
+        if (getPomodoroStateInteractor.execute() !is GetPomodoroStateInteractor.State.Running) return@launch
         pomodoroPauseInteractor.pause()
-        resumeAfterTagSelection = false
-        val stoppedTypeId = stopActiveActivity()
+        val pausedTimestamp = prefsInteractor.getPomodoroModePausedTimestampMs()
+        val runningRecord = getActiveRunningRecord()
+        if (runningRecord != null) {
+            pomodoroResumeTargetInteractor.save(
+                typeId = runningRecord.id,
+                comment = runningRecord.comment,
+                tags = runningRecord.tags,
+            )
+            removeRunningRecordMediator.removeWithRecordAdd(
+                runningRecord = runningRecord,
+                // Pause activity time starts exactly when this one ends.
+                timeEnded = pausedTimestamp.takeIf { it != 0L },
+                // Otherwise pomodoro would be stopped instead of paused.
+                checkPomodoroStop = false,
+            )
+        } else {
+            pomodoroResumeTargetInteractor.clear()
+        }
         updateButtonState()
         updateTimerState()
         updateInfoState()
-        showActivitySelection(excludedTypeId = stoppedTypeId)
+        showActivitySelection(excludedTypeId = runningRecord?.id)
     }
 
     fun onDataSelected(tag: String?, dataIds: List<Long>) {
         if (tag != PAUSE_ACTIVITY_SELECTION_TAG) return
         val typeId = dataIds.firstOrNull() ?: return
         viewModelScope.launch {
-            startActivityAfterPause(typeId)
+            startPauseActivity(typeId)
         }
     }
 
-    fun onTagSelected() {
-        viewModelScope.launch {
-            if (resumeAfterTagSelection) {
-                resumeAfterTagSelection = false
-                resumePomodoroAfterPause()
-            }
-            updateButtonState()
-            updateTimerState()
-            updateInfoState()
-        }
+    fun onEditEntryClicked() = viewModelScope.launch {
+        val runningRecord = getActiveRunningRecord() ?: return@launch
+        router.navigate(
+            ChangeRunningRecordFromPomodoroParams(
+                params = ChangeRunningRecordParams(
+                    transitionName = "",
+                    id = runningRecord.id,
+                    from = ChangeRunningRecordParams.From.RunningRecords,
+                    preview = null,
+                ),
+            ),
+        )
     }
 
     fun onPrevClicked() = viewModelScope.launch {
@@ -152,17 +172,9 @@ class PomodoroViewModel @Inject constructor(
         updateTimerState()
     }
 
-    private suspend fun stopActiveActivity(): Long? {
-        // If several activities are running (multitasking), stop the one that is shown on the screen.
-        val runningRecord = runningRecordInteractor.getAll()
-            .maxByOrNull { it.timeStarted }
-            ?: return null
-        removeRunningRecordMediator.removeWithRecordAdd(
-            runningRecord = runningRecord,
-            // Otherwise pomodoro would be stopped instead of paused.
-            checkPomodoroStop = false,
-        )
-        return runningRecord.id
+    // If several activities are running (multitasking), the one started last is the active one.
+    private suspend fun getActiveRunningRecord(): RunningRecord? {
+        return runningRecordInteractor.getAll().maxByOrNull { it.timeStarted }
     }
 
     private suspend fun resumeLastActivityIfNoneRunning() {
@@ -173,6 +185,30 @@ class PomodoroViewModel @Inject constructor(
             tags = lastRecord.tags,
             comment = lastRecord.comment,
         )
+    }
+
+    // Stops pause activity and brings back the activity that was paused, with its comment and tags.
+    private suspend fun resumeAfterPause() {
+        val target = pomodoroResumeTargetInteractor.get()
+        if (target == null) {
+            resumeLastActivityIfNoneRunning()
+            return
+        }
+        val runningRecord = getActiveRunningRecord()
+        if (runningRecord != null && runningRecord.id != target.typeId) {
+            removeRunningRecordMediator.removeWithRecordAdd(
+                runningRecord = runningRecord,
+                checkPomodoroStop = false,
+            )
+        }
+        if (!runningRecordInteractor.has(target.typeId)) {
+            addRunningRecordMediator.startTimer(
+                typeId = target.typeId,
+                tags = target.tags,
+                comment = target.comment,
+            )
+        }
+        pomodoroResumeTargetInteractor.clear()
     }
 
     private fun showActivitySelection(excludedTypeId: Long?) {
@@ -192,39 +228,26 @@ class PomodoroViewModel @Inject constructor(
         ).let(router::navigate)
     }
 
-    private suspend fun startActivityAfterPause(typeId: Long) {
-        val isRunning = runningRecordInteractor.has(typeId) ||
-            addRunningRecordMediator.tryStartTimer(
+    // Pause activity is tracked as a regular running activity, but pomodoro stays paused:
+    // no cycles, no tags or comment prompt.
+    private suspend fun startPauseActivity(typeId: Long) {
+        if (getPomodoroStateInteractor.execute() !is GetPomodoroStateInteractor.State.Paused) return
+        if (!runningRecordInteractor.has(typeId)) {
+            val pausedTimestamp = prefsInteractor.getPomodoroModePausedTimestampMs()
+            addRunningRecordMediator.startTimer(
                 typeId = typeId,
-                onNeedToShowTagSelection = { showTagSelection(typeId, it) },
+                tags = emptyList(),
+                comment = "",
+                timeStarted = if (pausedTimestamp != 0L) {
+                    AddRunningRecordMediator.StartTime.Timestamp(pausedTimestamp)
+                } else {
+                    AddRunningRecordMediator.StartTime.TakeCurrent
+                },
             )
-        if (isRunning) {
-            resumePomodoroAfterPause()
-        } else {
-            // Tag selection dialog is shown, wait for it.
-            resumeAfterTagSelection = true
         }
         updateButtonState()
         updateTimerState()
         updateInfoState()
-    }
-
-    private suspend fun resumePomodoroAfterPause() {
-        pomodoroPauseInteractor.startAfterPause()
-    }
-
-    private fun showTagSelection(
-        typeId: Long,
-        result: RecordDataSelectionDialogResult,
-    ) {
-        router.navigate(
-            RecordTagSelectionParams(
-                typeId = typeId,
-                fields = result.fields.toParams(),
-                preselectedTags = result.preselectedTags.map(RecordBase.Tag::toParams),
-                requiredValueSelectionTagIds = result.requiredValueSelectionTagIds,
-            ),
-        )
     }
 
     private fun resetAnimation() {
@@ -259,6 +282,7 @@ class PomodoroViewModel @Inject constructor(
 
     private suspend fun updateInfoState() {
         val info = pomodoroInfoInteractor.execute()
+        pauseActivityStartedMs = info.pauseActivityStartedMs
         infoState.set(pomodoroViewDataMapper.mapInfoState(info))
     }
 
@@ -286,6 +310,7 @@ class PomodoroViewModel @Inject constructor(
             timePausedMs = prefsInteractor.getPomodoroModePausedTimestampMs(),
             timerUpdateMs = TIMER_UPDATE_MS,
             settings = getPomodoroSettingsInteractor.execute(),
+            pauseElapsedMs = pauseActivityStartedMs?.let { System.currentTimeMillis() - it },
         )
     }
 

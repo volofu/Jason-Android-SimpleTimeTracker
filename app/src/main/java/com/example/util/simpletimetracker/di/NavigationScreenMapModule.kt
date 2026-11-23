@@ -33,6 +33,7 @@ import com.example.util.simpletimetracker.navigation.params.screen.ChangeRecordT
 import com.example.util.simpletimetracker.navigation.params.screen.ChangeRecordTagFromTagsParams
 import com.example.util.simpletimetracker.navigation.params.screen.ChangeRecordTypeParams
 import com.example.util.simpletimetracker.navigation.params.screen.ChangeRunningRecordFromMainParams
+import com.example.util.simpletimetracker.navigation.params.screen.ChangeRunningRecordFromPomodoroParams
 import com.example.util.simpletimetracker.navigation.params.screen.ChangeRunningRecordFromRecordsAllParams
 import com.example.util.simpletimetracker.navigation.params.screen.ChangeShortcutParams
 import com.example.util.simpletimetracker.navigation.params.screen.ComplexRulesParams
@@ -77,6 +78,16 @@ class NavigationScreenMapModule {
     fun changeRecordRunningFromMain(): NavigationData {
         return NavigationData(
             R.id.action_mainFragment_to_changeRunningRecordFragment,
+            bundleCreatorDelegate(ChangeRunningRecordFragment::createBundle),
+        )
+    }
+
+    @IntoMap
+    @Provides
+    @ScreenKey(ChangeRunningRecordFromPomodoroParams::class)
+    fun changeRecordRunningFromPomodoro(): NavigationData {
+        return NavigationData(
+            R.id.action_pomodoroFragment_to_changeRunningRecordFragment,
             bundleCreatorDelegate(ChangeRunningRecordFragment::createBundle),
         )
     }
