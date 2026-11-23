@@ -253,6 +253,8 @@ class PomodoroTest : BaseUiTest() {
         // Pause
         clickOnViewWithId(pomodoroR.id.btnPomodoroStart)
         clickOnViewWithId(pomodoroR.id.btnPomodoroPause)
+        // Pause also opens activity selection, close it.
+        pressBack()
         checkViewIsNotDisplayed(withId(pomodoroR.id.btnPomodoroRestart))
         checkViewIsNotDisplayed(withId(pomodoroR.id.btnPomodoroNext))
         checkViewIsNotDisplayed(withId(pomodoroR.id.btnPomodoroPrev))

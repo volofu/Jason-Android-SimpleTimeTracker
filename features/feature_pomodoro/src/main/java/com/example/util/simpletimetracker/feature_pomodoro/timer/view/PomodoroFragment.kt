@@ -10,7 +10,11 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import com.example.util.simpletimetracker.core.base.BaseFragment
 import com.example.util.simpletimetracker.core.utils.InsetConfiguration
+import com.example.util.simpletimetracker.domain.record.model.RecordBase
+import com.example.util.simpletimetracker.feature_dialogs.api.OnTagSelectedListener
+import com.example.util.simpletimetracker.feature_dialogs.api.TypesSelectionDialogListener
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroButtonState
+import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroInfoState
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroTimerState
 import com.example.util.simpletimetracker.feature_pomodoro.timer.viewModel.PomodoroViewModel
 import com.example.util.simpletimetracker.feature_views.extension.setOnClick
@@ -19,7 +23,10 @@ import dagger.hilt.android.AndroidEntryPoint
 import com.example.util.simpletimetracker.feature_pomodoro.databinding.PomodoroFragmentBinding as Binding
 
 @AndroidEntryPoint
-class PomodoroFragment : BaseFragment<Binding>() {
+class PomodoroFragment :
+    BaseFragment<Binding>(),
+    TypesSelectionDialogListener,
+    OnTagSelectedListener {
 
     override val inflater: (LayoutInflater, ViewGroup?, Boolean) -> Binding =
         Binding::inflate
@@ -43,6 +50,7 @@ class PomodoroFragment : BaseFragment<Binding>() {
     override fun initViewModel() = with(viewModel) {
         buttonState.observe(::setButtonState)
         timerState.observe(::setTimerState)
+        infoState.observe(::setInfoState)
     }
 
     override fun onResume() {
@@ -53,6 +61,31 @@ class PomodoroFragment : BaseFragment<Binding>() {
     override fun onPause() {
         super.onPause()
         viewModel.onHidden()
+    }
+
+    override fun onDataSelected(
+        tag: String,
+        dataIds: List<Long>,
+        tagValues: List<RecordBase.Tag>,
+        selectValueOnStartTagIds: List<Long>,
+    ) {
+        viewModel.onDataSelected(tag, dataIds)
+    }
+
+    override fun onTagSelected() {
+        viewModel.onTagSelected()
+    }
+
+    private fun setInfoState(state: PomodoroInfoState) = with(binding) {
+        tvPomodoroActivityName.text = state.activityName
+        tvPomodoroComment.text = state.comment
+        tvPomodoroComment.alpha = if (state.isCommentPlaceholder) 0.5f else 1f
+        tvPomodoroEntryTimes.text = state.entryTimes
+        tvPomodoroStatsTypeLabel.text = state.typeLabel
+        tvPomodoroStatsTypeToday.text = state.typeToday
+        tvPomodoroStatsTypeWeek.text = state.typeWeek
+        tvPomodoroStatsAllToday.text = state.allToday
+        tvPomodoroStatsAllWeek.text = state.allWeek
     }
 
     private fun setButtonState(state: PomodoroButtonState) = with(binding) {

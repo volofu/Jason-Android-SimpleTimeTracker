@@ -166,6 +166,164 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <LinearLayout
+        android:id="@+id/containerPomodoroHeader"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginTop="16dp"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvPomodoroActivityName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:maxLines="1"
+            android:textColor="?appTextPrimaryColor"
+            android:textSize="22sp"
+            tools:text="Deep work" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvPomodoroComment"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:ellipsize="end"
+            android:fontFamily="sans-serif-condensed"
+            android:gravity="center"
+            android:maxLines="2"
+            android:textColor="?appTextPrimaryColor"
+            android:textSize="16sp"
+            tools:text="Writing the quarterly report" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvPomodoroEntryTimes"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="sans-serif-condensed"
+            android:gravity="center"
+            android:maxLines="2"
+            android:textColor="?appTextHintColor"
+            android:textSize="14sp"
+            tools:text="Total 1:23:45  \u00B7  Focus 1:10:00  \u00B7  Pause 0:13:45" />
+
+    </LinearLayout>
+
+    <TableLayout
+        android:id="@+id/tablePomodoroStats"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp"
+        android:layout_marginBottom="8dp"
+        android:shrinkColumns="0"
+        android:stretchColumns="1,2"
+        app:layout_constraintBottom_toTopOf="@id/flowPomodoroMainButtons"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TableRow>
+
+            <Space />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-condensed"
+                android:gravity="end"
+                android:text="@string/pomodoro_info_today"
+                android:textColor="?appTextHintColor"
+                android:textSize="13sp" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-condensed"
+                android:gravity="end"
+                android:text="@string/pomodoro_info_week"
+                android:textColor="?appTextHintColor"
+                android:textSize="13sp" />
+
+        </TableRow>
+
+        <TableRow android:layout_marginTop="4dp">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvPomodoroStatsTypeLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-condensed"
+                android:maxLines="1"
+                android:textColor="?appTextPrimaryColor"
+                android:textSize="15sp"
+                tools:text="Deep work" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvPomodoroStatsTypeToday"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-condensed"
+                android:gravity="end"
+                android:textColor="?appTextPrimaryColor"
+                android:textSize="15sp"
+                tools:text="1h 25m" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvPomodoroStatsTypeWeek"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-condensed"
+                android:gravity="end"
+                android:textColor="?appTextPrimaryColor"
+                android:textSize="15sp"
+                tools:text="7h 10m" />
+
+        </TableRow>
+
+        <TableRow android:layout_marginTop="4dp">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:fontFamily="sans-serif-condensed"
+                android:maxLines="1"
+                android:text="@string/pomodoro_info_all_activities"
+                android:textColor="?appTextPrimaryColor"
+                android:textSize="15sp" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvPomodoroStatsAllToday"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-condensed"
+                android:gravity="end"
+                android:textColor="?appTextPrimaryColor"
+                android:textSize="15sp"
+                tools:text="3h 10m / 6h 10m" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvPomodoroStatsAllWeek"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-condensed"
+                android:gravity="end"
+                android:textColor="?appTextPrimaryColor"
+                android:textSize="15sp"
+                tools:text="15h 30m / 27h 40m" />
+
+        </TableRow>
+
+    </TableLayout>
+
     <com.google.android.material.progressindicator.CircularProgressIndicator
         android:id="@+id/viewPomodoroTimer"
         android:layout_width="0dp"
@@ -175,11 +333,11 @@
         android:layout_marginBottom="16dp"
         app:indicatorColor="?colorSecondary"
         app:indicatorInset="0dp"
-        app:layout_constraintBottom_toTopOf="@id/btnPomodoroStart"
+        app:layout_constraintBottom_toTopOf="@id/tablePomodoroStats"
         app:layout_constraintDimensionRatio="1:1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/containerPomodoroHeader"
         app:trackColor="?appDividerColor"
         app:trackCornerRadius="0dp"
         app:trackThickness="1dp"

@@ -8,6 +8,8 @@ import com.example.util.simpletimetracker.domain.pomodoro.model.PomodoroCycleSet
 import com.example.util.simpletimetracker.domain.pomodoro.model.PomodoroCycleType
 import com.example.util.simpletimetracker.feature_pomodoro.R
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroButtonState
+import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroInfo
+import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroInfoState
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroTimerState
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -103,6 +105,68 @@ class PomodoroViewDataMapper @Inject constructor(
                 currentCycleHint = mapCurrentStateHint(currentCycle),
             )
         }
+    }
+
+    fun mapInfoState(
+        info: PomodoroInfo,
+    ): PomodoroInfoState {
+        val activity = info.activity
+        val hasActivity = activity != null
+        val hasComment = activity?.comment?.isNotBlank() == true
+        val typeName = activity?.name?.takeUnless { it.isEmpty() }
+            ?: resourceRepo.getString(R.string.pomodoro_info_no_activity)
+
+        val entryTimes = if (info.entry != null) {
+            listOf(
+                R.string.pomodoro_info_total to info.entry.totalMs,
+                R.string.pomodoro_state_focus to info.entry.focusMs,
+                R.string.pomodoro_info_pause to info.entry.pauseMs,
+            ).joinToString(separator = "  \u00B7  ") { (label, value) ->
+                "${resourceRepo.getString(label)} ${formatClock(value)}"
+            }
+        } else {
+            resourceRepo.getString(R.string.pomodoro_info_not_running)
+        }
+
+        return PomodoroInfoState(
+            activityName = typeName,
+            comment = if (hasComment) {
+                activity?.comment.orEmpty().trim()
+            } else {
+                resourceRepo.getString(R.string.pomodoro_info_no_comment)
+            },
+            isCommentPlaceholder = !hasComment,
+            entryTimes = entryTimes,
+            typeLabel = if (hasActivity) typeName else "-",
+            typeToday = formatDuration(info.typeTodayMs),
+            typeWeek = formatDuration(info.typeWeekMs),
+            allToday = formatDurationWithTotal(info.allTodayMs, info.dayWindowMs),
+            allWeek = formatDurationWithTotal(info.allWeekMs, info.weekWindowMs),
+        )
+    }
+
+    // 1:23:45
+    private fun formatClock(durationMs: Long): String {
+        val totalSeconds = TimeUnit.MILLISECONDS.toSeconds(durationMs.coerceAtLeast(0L))
+        val hr = totalSeconds / 3600
+        val min = totalSeconds % 3600 / 60
+        val sec = totalSeconds % 60
+        return "$hr:${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}"
+    }
+
+    // 1h 25m
+    private fun formatDuration(durationMs: Long): String {
+        val totalMinutes = TimeUnit.MILLISECONDS.toMinutes(durationMs.coerceAtLeast(0L))
+        val hr = totalMinutes / 60
+        val min = totalMinutes % 60
+        val hrString = resourceRepo.getString(R.string.time_hour)
+        val minString = resourceRepo.getString(R.string.time_minute)
+        return if (hr > 0) "$hr$hrString $min$minString" else "$min$minString"
+    }
+
+    // 3h 10m / 6h 10m
+    private fun formatDurationWithTotal(durationMs: Long, totalMs: Long): String {
+        return "${formatDuration(durationMs)} / ${formatDuration(totalMs)}"
     }
 
     private fun mapToDurationState(

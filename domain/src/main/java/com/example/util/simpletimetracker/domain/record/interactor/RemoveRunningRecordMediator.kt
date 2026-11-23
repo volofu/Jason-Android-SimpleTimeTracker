@@ -32,6 +32,7 @@ class RemoveRunningRecordMediator @Inject constructor(
         updateNotificationSwitch: Boolean = true,
         timeEnded: Long? = null, // null - take current time.
         requestId: String? = null,
+        checkPomodoroStop: Boolean = true,
     ) = mutex.withLock {
         val runningRecord = runningRecordInteractor.get(runningRecord.id)
             ?.takeIf { it.timeStarted == runningRecord.timeStarted }
@@ -63,6 +64,7 @@ class RemoveRunningRecordMediator @Inject constructor(
             typeId = runningRecord.id,
             updateWidgets = updateWidgets,
             updateNotificationSwitch = updateNotificationSwitch,
+            checkPomodoroStop = checkPomodoroStop,
             lifecycleEvent = RecordTimerEvent.STOPPED.takeIf { recordWasSaved },
         )
     }

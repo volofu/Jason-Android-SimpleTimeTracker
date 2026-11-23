@@ -687,6 +687,14 @@ Example:<br/>
     <string name="pomodoro_state_focus">Focus</string>
     <string name="pomodoro_state_break">Break</string>
     <string name="pomodoro_state_long_break">Long break</string>
+    <string name="pomodoro_info_no_activity">No activity</string>
+    <string name="pomodoro_info_no_comment">No comment</string>
+    <string name="pomodoro_info_not_running">Not running</string>
+    <string name="pomodoro_info_total">Total</string>
+    <string name="pomodoro_info_pause">Pause</string>
+    <string name="pomodoro_info_today">Today</string>
+    <string name="pomodoro_info_week">Week</string>
+    <string name="pomodoro_info_all_activities">All activities</string>
     <string name="pomodoro_settings_periods_until_long_break">Periods until long break</string>
     <string name="pomodoro_settings_show_more_controls">Show more controls</string>
 
