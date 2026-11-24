@@ -7,6 +7,7 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import com.example.util.simpletimetracker.feature_pomodoro.R
+import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroPieSlice
 import com.example.util.simpletimetracker.feature_views.extension.getThemedAttr
 
 /**
@@ -18,12 +19,11 @@ class PomodoroPieView @JvmOverloads constructor(
     defStyleAttr: Int = 0,
 ) : View(context, attrs, defStyleAttr) {
 
-    // 0..1
-    var fraction: Float = 0f
+    // Slices are drawn clockwise from the top, the rest of the circle is empty.
+    var slices: List<PomodoroPieSlice> = emptyList()
         set(value) {
-            val newValue = value.coerceIn(0f, 1f)
-            if (field != newValue) {
-                field = newValue
+            if (field != value) {
+                field = value
                 invalidate()
             }
         }
@@ -35,7 +35,6 @@ class PomodoroPieView @JvmOverloads constructor(
     }
     private val fillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.FILL
-        color = context.getThemedAttr(R.attr.colorSecondary)
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -47,10 +46,17 @@ class PomodoroPieView @JvmOverloads constructor(
             (height - paddingBottom).toFloat(),
         )
         canvas.drawOval(rect, trackPaint)
-        if (fraction >= 1f) {
-            canvas.drawOval(rect, fillPaint)
-        } else if (fraction > 0f) {
-            canvas.drawArc(rect, START_ANGLE, SWEEP_ANGLE * fraction, true, fillPaint)
+        var startAngle = START_ANGLE
+        slices.forEach { slice ->
+            val sweep = SWEEP_ANGLE * slice.fraction.coerceIn(0f, 1f)
+            if (sweep <= 0f) return@forEach
+            fillPaint.color = slice.color
+            if (sweep >= SWEEP_ANGLE) {
+                canvas.drawOval(rect, fillPaint)
+            } else {
+                canvas.drawArc(rect, startAngle, sweep, true, fillPaint)
+            }
+            startAngle += sweep
         }
     }
 

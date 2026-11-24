@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.util.simpletimetracker.core.base.BaseViewModel
 import com.example.util.simpletimetracker.core.extension.lazySuspend
 import com.example.util.simpletimetracker.core.extension.set
+import com.example.util.simpletimetracker.core.repo.ResourceRepo
+import com.example.util.simpletimetracker.feature_pomodoro.R
 import com.example.util.simpletimetracker.feature_settings.api.SettingsBlock
 import com.example.util.simpletimetracker.domain.pomodoro.interactor.PomodoroCycleNotificationInteractor
 import com.example.util.simpletimetracker.domain.pomodoro.mapper.PomodoroWorkScheduleMapper
@@ -20,6 +22,7 @@ import com.example.util.simpletimetracker.navigation.params.action.OpenSystemSet
 import com.example.util.simpletimetracker.navigation.params.screen.DateTimeDialogParams
 import com.example.util.simpletimetracker.navigation.params.screen.DateTimeDialogType
 import com.example.util.simpletimetracker.navigation.params.screen.DurationDialogParams
+import com.example.util.simpletimetracker.navigation.params.screen.TypesSelectionDialogParams
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -28,6 +31,7 @@ import javax.inject.Inject
 @HiltViewModel
 class PomodoroSettingsViewModel @Inject constructor(
     private val router: Router,
+    private val resourceRepo: ResourceRepo,
     private val prefsInteractor: PrefsInteractor,
     private val pomodoroSettingsViewDataInteractor: PomodoroSettingsViewDataInteractor,
     private val pomodoroCycleNotificationInteractor: PomodoroCycleNotificationInteractor,
@@ -63,6 +67,12 @@ class PomodoroSettingsViewModel @Inject constructor(
                 onPeriodsUntilLongBreakClicked()
             SettingsBlock.PomodoroShowMoreControls ->
                 onShowMoreControlsClicked()
+            SettingsBlock.PomodoroWorkActivities ->
+                onWorkSelectionClicked(isCategory = false)
+            SettingsBlock.PomodoroWorkCategories ->
+                onWorkSelectionClicked(isCategory = true)
+            SettingsBlock.PomodoroCountUp ->
+                onCountUpClicked()
             else -> {
                 PomodoroScheduleItem.all.firstOrNull { block == it.startBlock || block == it.endBlock }
                     ?.let { onScheduleClicked(it, isStart = block == it.startBlock) }
@@ -203,6 +213,47 @@ class PomodoroSettingsViewModel @Inject constructor(
             .let(pomodoroWorkScheduleMapper::fromString)
     }
 
+    private fun onWorkSelectionClicked(isCategory: Boolean) = viewModelScope.launch {
+        val selected = if (isCategory) {
+            prefsInteractor.getPomodoroWorkCategories()
+        } else {
+            prefsInteractor.getPomodoroWorkActivities()
+        }
+        TypesSelectionDialogParams(
+            tag = if (isCategory) WORK_CATEGORIES_SELECTION_TAG else WORK_ACTIVITIES_SELECTION_TAG,
+            title = resourceRepo.getString(
+                if (isCategory) R.string.pomodoro_settings_work_categories else R.string.pomodoro_settings_work_activities,
+            ),
+            subtitle = "",
+            type = if (isCategory) {
+                TypesSelectionDialogParams.Type.Category
+            } else {
+                TypesSelectionDialogParams.Type.Activity
+            },
+            selectedTypeIds = selected,
+            selectedTagValues = emptyList(),
+            selectedTagValueOnStart = emptyList(),
+            isMultiSelectAvailable = true,
+            idsShouldBeVisible = selected,
+            showHints = false,
+            allowTagValueSelection = false,
+        ).let(router::navigate)
+    }
+
+    fun onDataSelected(tag: String?, dataIds: List<Long>) = viewModelScope.launch {
+        when (tag) {
+            WORK_CATEGORIES_SELECTION_TAG -> prefsInteractor.setPomodoroWorkCategories(dataIds)
+            WORK_ACTIVITIES_SELECTION_TAG -> prefsInteractor.setPomodoroWorkActivities(dataIds)
+            else -> return@launch
+        }
+        updateContent()
+    }
+
+    private fun onCountUpClicked() = viewModelScope.launch {
+        prefsInteractor.setPomodoroCountUpDuringWorkHours(!prefsInteractor.getPomodoroCountUpDuringWorkHours())
+        updateContent()
+    }
+
     private fun onShowMoreControlsClicked() = viewModelScope.launch {
         val newValue = !prefsInteractor.getPomodoroShowMoreControls()
         prefsInteractor.setPomodoroShowMoreControls(newValue)
@@ -222,6 +273,8 @@ class PomodoroSettingsViewModel @Inject constructor(
         const val BREAK_TIME_DURATION_DIALOG_TAG = "BREAK_TIME_DURATION_DIALOG_TAG"
         const val LONG_BREAK_TIME_DURATION_DIALOG_TAG = "LONG_BREAK_TIME_DURATION_DIALOG_TAG"
         const val PERIODS_UNTIL_LONG_BREAK_DIALOG_TAG = "PERIODS_UNTIL_LONG_BREAK_DIALOG_TAG"
+        private const val WORK_CATEGORIES_SELECTION_TAG = "POMODORO_WORK_CATEGORIES_SELECTION_TAG"
+        private const val WORK_ACTIVITIES_SELECTION_TAG = "POMODORO_WORK_ACTIVITIES_SELECTION_TAG"
         private const val SCHEDULE_TAG_PREFIX = "POMODORO_SCHEDULE"
         private const val SCHEDULE_TAG_DELIMITER = "|"
         private const val SCHEDULE_TAG_START = "START"

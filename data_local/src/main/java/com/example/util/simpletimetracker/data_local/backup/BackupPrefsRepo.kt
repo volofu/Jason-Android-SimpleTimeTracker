@@ -102,6 +102,10 @@ import com.example.util.simpletimetracker.data_local.prefs.PrefsRepoImpl.Compani
 import com.example.util.simpletimetracker.data_local.prefs.PrefsRepoImpl.Companion.KEY_IS_TAG_SEARCH_ENABLED
 import com.example.util.simpletimetracker.data_local.prefs.PrefsRepoImpl.Companion.KEY_START_TIMER_BY_LONG_CLICK
 import com.example.util.simpletimetracker.data_local.prefs.PrefsRepoImpl.Companion.KEY_POMODORO_SHOW_MORE_CONTROLS
+import com.example.util.simpletimetracker.data_local.prefs.PrefsRepoImpl.Companion.KEY_POMODORO_COUNT_UP_DURING_WORK_HOURS
+import com.example.util.simpletimetracker.data_local.prefs.PrefsRepoImpl.Companion.KEY_POMODORO_PIE_INCLUDE_UNUTILIZED
+import com.example.util.simpletimetracker.data_local.prefs.PrefsRepoImpl.Companion.KEY_POMODORO_WORK_ACTIVITIES
+import com.example.util.simpletimetracker.data_local.prefs.PrefsRepoImpl.Companion.KEY_POMODORO_WORK_CATEGORIES
 import com.example.util.simpletimetracker.data_local.prefs.PrefsRepoImpl.Companion.KEY_POMODORO_WORK_SCHEDULE
 import com.example.util.simpletimetracker.data_local.prefs.PrefsRepoImpl.Companion.KEY_TYPE_ADDITIONAL_FIELDS_SHOWN
 import com.example.util.simpletimetracker.data_local.prefs.PrefsRepoImpl.Companion.KEY_UNTRACKED_DAYS_OF_WEEK
@@ -217,6 +221,10 @@ class BackupPrefsRepo @Inject constructor(
             PrefsProcessor(KEY_POMODORO_PERIODS_UNTIL_LONG_BREAK, ::pomodoroPeriodsUntilLongBreak),
             PrefsProcessor(KEY_POMODORO_SHOW_MORE_CONTROLS, ::pomodoroShowMoreControls),
             PrefsProcessor(KEY_POMODORO_WORK_SCHEDULE, ::pomodoroWorkSchedule),
+            PrefsProcessor(KEY_POMODORO_WORK_ACTIVITIES, ::pomodoroWorkActivities),
+            PrefsProcessor(KEY_POMODORO_WORK_CATEGORIES, ::pomodoroWorkCategories),
+            PrefsProcessor(KEY_POMODORO_PIE_INCLUDE_UNUTILIZED, ::pomodoroPieIncludeUnutilized),
+            PrefsProcessor(KEY_POMODORO_COUNT_UP_DURING_WORK_HOURS, ::pomodoroCountUpDuringWorkHours),
             PrefsProcessor(KEY_SHOW_GOALS_SEPARATELY, ::showGoalsSeparately),
             PrefsProcessor(KEY_HIDE_FINISHED_GOALS, ::hideFinishedGoals),
             PrefsProcessor(KEY_ALLOW_MULTITASKING, ::allowMultitasking),

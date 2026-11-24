@@ -12,12 +12,17 @@ data class PomodoroInfo(
     val pausedActivity: Activity?,
     // Null if pomodoro is not started.
     val entry: PomodoroEntryTimeMapper.Result?,
-    // Not null if pomodoro is paused and a pause activity is running.
-    val pauseActivityStartedMs: Long?,
+    // Not null if the screen shows an infinite timer instead of pomodoro cycles.
+    val countUp: CountUp?,
     val typeTodayMs: Long,
     val typeWeekMs: Long,
-    val allTodayMs: Long,
-    val allWeekMs: Long,
+    // Work is defined in settings, every group is an activity category, activities that were chosen
+    // separately are in a group of their own.
+    val workGroups: List<WorkGroup>,
+    // Every work time counted once, even if it is in several groups.
+    val workTotalTodayMs: Long,
+    val workTotalWeekMs: Long,
+    val includeUnutilized: Boolean,
     // How much of the working hours has already passed.
     val dayWindowMs: Long,
     val weekWindowMs: Long,
@@ -28,5 +33,18 @@ data class PomodoroInfo(
         val name: String,
         val comment: String,
         val isRunning: Boolean,
+    )
+
+    data class CountUp(
+        val startedMs: Long,
+        // Pause activity (pomodoro is paused) or just an activity without pomodoro.
+        val isPause: Boolean,
+    )
+
+    data class WorkGroup(
+        // Null - name for all work, when it is not set up.
+        val name: String?,
+        val todayMs: Long,
+        val weekMs: Long,
     )
 }

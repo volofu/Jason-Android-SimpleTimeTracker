@@ -687,6 +687,8 @@ Example:<br/>
     <string name="pomodoro_state_focus">Focus</string>
     <string name="pomodoro_state_break">Break</string>
     <string name="pomodoro_state_long_break">Long break</string>
+    <string name="pomodoro_button_running">Running</string>
+    <string name="pomodoro_button_paused">Paused</string>
     <string name="pomodoro_info_no_activity">No activity</string>
     <string name="pomodoro_info_no_comment">No comment</string>
     <string name="pomodoro_info_not_running">Not running</string>
@@ -696,6 +698,16 @@ Example:<br/>
     <string name="pomodoro_info_week">Week</string>
     <string name="pomodoro_info_all_activities">All activities</string>
     <string name="pomodoro_info_work_ratio">Worked vs. work hours</string>
+    <string name="pomodoro_info_other_work">Other work</string>
+    <string name="pomodoro_info_elapsed">Elapsed</string>
+    <string name="pomodoro_info_paused_comment">Paused comment: %1$s</string>
+    <string name="pomodoro_info_include_unutilized">Include unused work time in the chart</string>
+    <string name="pomodoro_settings_work_activities">Work activities</string>
+    <string name="pomodoro_settings_work_categories">Work categories</string>
+    <string name="pomodoro_settings_work_none">Not set, all activities</string>
+    <string name="pomodoro_settings_work_count">%1$d selected</string>
+    <string name="pomodoro_settings_count_up">Timer for other activities</string>
+    <string name="pomodoro_settings_count_up_hint">Show the white to red timer for activities without pomodoro during work hours</string>
     <string name="pomodoro_info_paused_task">Paused: %1$s</string>
     <string name="pomodoro_info_edit_entry">Comment / tags</string>
     <string name="pomodoro_settings_work_hours_weekdays">Work hours: weekdays</string>

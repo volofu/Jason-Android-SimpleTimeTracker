@@ -6,20 +6,26 @@ data class PomodoroInfoState(
     val isCommentPlaceholder: Boolean,
     // Empty - not visible.
     val pausedActivity: String,
+    val pausedComment: String,
     val entryTimes: String,
     val editButtonVisible: Boolean,
-    val typeLabel: String,
-    val typeToday: String,
-    val typeWeek: String,
-    val allToday: String,
-    val allWeek: String,
+    val rows: List<Row>,
     val ratioToday: Ratio,
     val ratioWeek: Ratio,
+    val includeUnutilized: Boolean,
 ) {
+
+    data class Row(
+        val name: String,
+        val today: String,
+        val week: String,
+        // Null - no color mark.
+        val color: Int?,
+        val isTotal: Boolean = false,
+    )
 
     data class Ratio(
         val text: String,
-        // 0..1
-        val fraction: Float,
+        val slices: List<PomodoroPieSlice>,
     )
 }

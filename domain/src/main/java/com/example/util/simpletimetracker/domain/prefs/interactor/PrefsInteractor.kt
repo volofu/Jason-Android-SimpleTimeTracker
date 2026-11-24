@@ -488,6 +488,38 @@ class PrefsInteractor @Inject constructor(
         prefsRepo.pomodoroShowMoreControls = value
     }
 
+    suspend fun getPomodoroWorkActivities(): List<Long> = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroWorkActivities.mapNotNull(String::toLongOrNull)
+    }
+
+    suspend fun setPomodoroWorkActivities(value: List<Long>) = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroWorkActivities = value.map(Long::toString).toSet()
+    }
+
+    suspend fun getPomodoroWorkCategories(): List<Long> = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroWorkCategories.mapNotNull(String::toLongOrNull)
+    }
+
+    suspend fun setPomodoroWorkCategories(value: List<Long>) = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroWorkCategories = value.map(Long::toString).toSet()
+    }
+
+    suspend fun getPomodoroPieIncludeUnutilized(): Boolean = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroPieIncludeUnutilized
+    }
+
+    suspend fun setPomodoroPieIncludeUnutilized(value: Boolean) = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroPieIncludeUnutilized = value
+    }
+
+    suspend fun getPomodoroCountUpDuringWorkHours(): Boolean = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroCountUpDuringWorkHours
+    }
+
+    suspend fun setPomodoroCountUpDuringWorkHours(value: Boolean) = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroCountUpDuringWorkHours = value
+    }
+
     suspend fun getPomodoroWorkSchedule(): String = withContext(Dispatchers.IO) {
         prefsRepo.pomodoroWorkSchedule
     }

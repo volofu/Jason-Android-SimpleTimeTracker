@@ -17,6 +17,9 @@ import com.example.util.simpletimetracker.domain.activityFilter.model.ActivityFi
 import com.example.util.simpletimetracker.domain.base.UNTRACKED_ITEM_ID
 import com.example.util.simpletimetracker.domain.darkMode.interactor.ThemeChangedInteractor
 import com.example.util.simpletimetracker.domain.extension.orZero
+import com.example.util.simpletimetracker.domain.pomodoro.interactor.GetPomodoroStateInteractor
+import com.example.util.simpletimetracker.domain.pomodoro.mapper.PomodoroWorkScheduleMapper
+import com.example.util.simpletimetracker.domain.pomodoro.mapper.PomodoroWorkWindowMapper
 import com.example.util.simpletimetracker.domain.prefs.interactor.PrefsInteractor
 import com.example.util.simpletimetracker.domain.record.interactor.AddRunningRecordMediator
 import com.example.util.simpletimetracker.domain.record.interactor.RecordInteractor
@@ -77,6 +80,9 @@ class RunningRecordsViewModel @Inject constructor(
     private val themeChangedInteractor: ThemeChangedInteractor,
     private val onShortcutClickInteractor: OnShortcutClickInteractor,
     private val cardOrderChangedInteractor: CardOrderChangedInteractor,
+    private val getPomodoroStateInteractor: GetPomodoroStateInteractor,
+    private val pomodoroWorkWindowMapper: PomodoroWorkWindowMapper,
+    private val pomodoroWorkScheduleMapper: PomodoroWorkScheduleMapper,
 ) : BaseViewModel() {
 
     override var delayDataLoad: Boolean = false
@@ -96,6 +102,7 @@ class RunningRecordsViewModel @Inject constructor(
     private var completeTypeIds: Set<Long> = emptySet()
     private var navBarHeightDp: Int = 0
     private var searchText: String = ""
+    private var pendingPomodoroTypeId: Long? = null
 
     init {
         subscribeToUpdates()
@@ -128,6 +135,7 @@ class RunningRecordsViewModel @Inject constructor(
                 )
                 if (wasStarted) {
                     onRecordTypeWithDefaultDurationClick(item.id)
+                    openPomodoroIfNeeded(item.id)
                 }
             }
             updateRunningRecords()
@@ -164,6 +172,11 @@ class RunningRecordsViewModel @Inject constructor(
             ),
             sharedElements = mapOf(sharedElements),
         )
+    }
+
+    fun onPomodoroButtonClick() {
+        delayDataLoad = true
+        router.navigate(PomodoroParams)
     }
 
     fun onSpecialRecordTypeClick(item: RunningRecordTypeSpecialViewData) {
@@ -459,6 +472,35 @@ class RunningRecordsViewModel @Inject constructor(
 
     fun onTagSelected() {
         updateRunningRecords()
+        pendingPomodoroTypeId?.let { typeId ->
+            pendingPomodoroTypeId = null
+            viewModelScope.launch { openPomodoroIfNeeded(typeId) }
+        }
+    }
+
+    // Pomodoro screen is shown for activities that start pomodoro, and for the other activities
+    // during work hours, where it works as an infinite timer.
+    private suspend fun openPomodoroIfNeeded(typeId: Long) {
+        if (!prefsInteractor.getEnablePomodoroMode()) return
+        if (!runningRecordInteractor.has(typeId)) return
+        val state = getPomodoroStateInteractor.execute()
+        val isAutostart = typeId in prefsInteractor.getAutostartPomodoroActivities()
+
+        val needToOpen = if (isAutostart) {
+            state is GetPomodoroStateInteractor.State.Running
+        } else {
+            state is GetPomodoroStateInteractor.State.Stopped &&
+                prefsInteractor.getPomodoroCountUpDuringWorkHours() &&
+                pomodoroWorkWindowMapper.isWithinWindow(
+                    nowMs = System.currentTimeMillis(),
+                    schedule = prefsInteractor.getPomodoroWorkSchedule()
+                        .let(pomodoroWorkScheduleMapper::fromString),
+                )
+        }
+        if (needToOpen) {
+            delayDataLoad = true
+            router.navigate(PomodoroParams)
+        }
     }
 
     fun onTabReselected(tab: NavigationTab?) {
@@ -499,6 +541,7 @@ class RunningRecordsViewModel @Inject constructor(
         typeId: Long,
         result: RecordDataSelectionDialogResult,
     ) {
+        pendingPomodoroTypeId = typeId
         router.navigate(
             RecordTagSelectionParams(
                 typeId = typeId,

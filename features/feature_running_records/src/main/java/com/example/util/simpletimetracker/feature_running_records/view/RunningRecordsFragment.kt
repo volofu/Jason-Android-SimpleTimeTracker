@@ -29,6 +29,7 @@ import com.example.util.simpletimetracker.feature_base_adapter.hintBig.createHin
 import com.example.util.simpletimetracker.feature_base_adapter.loader.createLoaderAdapterDelegate
 import com.example.util.simpletimetracker.feature_base_adapter.recordShortcut.createRecordShortcutAdapterDelegate
 import com.example.util.simpletimetracker.feature_base_adapter.recordType.createRecordTypeAdapterDelegate
+import com.example.util.simpletimetracker.feature_base_adapter.pomodoroButton.createPomodoroButtonAdapterDelegate
 import com.example.util.simpletimetracker.feature_base_adapter.recordTypeSpecial.createRunningRecordTypeSpecialAdapterDelegate
 import com.example.util.simpletimetracker.feature_base_adapter.recordTypeSuggestion.createRecordTypeSuggestionAdapterDelegate
 import com.example.util.simpletimetracker.feature_base_adapter.recordWithHint.createRecordWithHintAdapterDelegate
@@ -99,6 +100,9 @@ class RunningRecordsFragment :
                 onLongClickWithTransition = throttle(viewModel::onShortcutLongClick),
                 onSpinnerPositionSelected = viewModel::onShortcutSpinnerPositionSelected,
                 onButtonClicked = viewModel::onShortcutButtonClick,
+            ),
+            createPomodoroButtonAdapterDelegate(
+                onClick = throttle(viewModel::onPomodoroButtonClick),
             ),
             createRunningRecordTypeSpecialAdapterDelegate(
                 onItemClick = throttle(viewModel::onSpecialRecordTypeClick),

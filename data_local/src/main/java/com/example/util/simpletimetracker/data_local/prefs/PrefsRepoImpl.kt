@@ -256,6 +256,22 @@ class PrefsRepoImpl @Inject constructor(
         KEY_POMODORO_WORK_SCHEDULE, "",
     )
 
+    override var pomodoroWorkActivities: Set<String> by prefs.delegate(
+        KEY_POMODORO_WORK_ACTIVITIES, emptySet(),
+    )
+
+    override var pomodoroWorkCategories: Set<String> by prefs.delegate(
+        KEY_POMODORO_WORK_CATEGORIES, emptySet(),
+    )
+
+    override var pomodoroPieIncludeUnutilized: Boolean by prefs.delegate(
+        KEY_POMODORO_PIE_INCLUDE_UNUTILIZED, true,
+    )
+
+    override var pomodoroCountUpDuringWorkHours: Boolean by prefs.delegate(
+        KEY_POMODORO_COUNT_UP_DURING_WORK_HOURS, true,
+    )
+
     override var pomodoroEntryStartedTimestamp: Long by prefs.delegate(
         KEY_POMODORO_ENTRY_STARTED_TIMESTAMP, 0,
     )
@@ -756,6 +772,10 @@ class PrefsRepoImpl @Inject constructor(
             remove(KEY_POMODORO_PERIODS_UNTIL_LONG_BREAK)
             remove(KEY_POMODORO_SHOW_MORE_CONTROLS)
             remove(KEY_POMODORO_WORK_SCHEDULE)
+            remove(KEY_POMODORO_WORK_ACTIVITIES)
+            remove(KEY_POMODORO_WORK_CATEGORIES)
+            remove(KEY_POMODORO_PIE_INCLUDE_UNUTILIZED)
+            remove(KEY_POMODORO_COUNT_UP_DURING_WORK_HOURS)
         }
     }
 
@@ -841,6 +861,10 @@ class PrefsRepoImpl @Inject constructor(
         const val KEY_POMODORO_PERIODS_UNTIL_LONG_BREAK = "pomodoroPeriodsUntilLongBreak"
         const val KEY_POMODORO_SHOW_MORE_CONTROLS = "pomodoroShowMoreControls"
         const val KEY_POMODORO_WORK_SCHEDULE = "pomodoroWorkSchedule"
+        const val KEY_POMODORO_WORK_ACTIVITIES = "pomodoroWorkActivities"
+        const val KEY_POMODORO_WORK_CATEGORIES = "pomodoroWorkCategories"
+        const val KEY_POMODORO_PIE_INCLUDE_UNUTILIZED = "pomodoroPieIncludeUnutilized"
+        const val KEY_POMODORO_COUNT_UP_DURING_WORK_HOURS = "pomodoroCountUpDuringWorkHours"
         const val KEY_ALLOW_MULTIPLE_ACTIVITY_FILTERS = "allowMultipleActivityFilters"
         const val KEY_SHOW_CATEGORIES_AS_PREDEFINED_FILTERS = "showCategoriesAsPredefinedFilters"
         const val KEY_SELECTED_PREDEFINED_FILTERS = "selectedPredefinedFilters"

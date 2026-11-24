@@ -10,6 +10,7 @@ import com.example.util.simpletimetracker.feature_pomodoro.R
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroButtonState
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroInfo
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroInfoState
+import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroPieSlice
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroTimerState
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -58,17 +59,19 @@ class PomodoroViewDataMapper @Inject constructor(
         timePausedMs: Long,
         timerUpdateMs: Long,
         settings: PomodoroCycleSettings,
-        // Not null if a pause activity is running: pomodoro is paused and an infinite timer is shown.
-        pauseElapsedMs: Long? = null,
+        // Not null if an infinite timer is shown instead of pomodoro cycles.
+        countUpElapsedMs: Long? = null,
+        countUpIsPause: Boolean = true,
     ): PomodoroTimerState {
         // Min increment of one pixel.
         val maxProgress = 1024 * Math.PI
         val isStarted = state !is GetPomodoroStateInteractor.State.Stopped
         val isPaused = state is GetPomodoroStateInteractor.State.Paused
 
-        if (isPaused && pauseElapsedMs != null) {
+        if (countUpElapsedMs != null && !isStartedAndRunning(state)) {
             return mapPauseTimerState(
-                elapsedMs = pauseElapsedMs,
+                elapsedMs = countUpElapsedMs,
+                hint = if (countUpIsPause) R.string.pomodoro_info_pause else R.string.pomodoro_info_elapsed,
                 settings = settings,
                 maxProgress = maxProgress.toInt(),
                 timerUpdateMs = timerUpdateMs,
@@ -141,9 +144,12 @@ class PomodoroViewDataMapper @Inject constructor(
 
         val pausedActivity = info.pausedActivity?.let {
             val name = it.name.ifEmpty { resourceRepo.getString(R.string.pomodoro_info_no_activity) }
+            resourceRepo.getString(R.string.pomodoro_info_paused_task, name)
+        }.orEmpty()
+        val pausedComment = info.pausedActivity?.let {
             val comment = it.comment.trim()
-            val text = if (comment.isEmpty()) name else "$name  \u00B7  $comment"
-            resourceRepo.getString(R.string.pomodoro_info_paused_task, text)
+                .ifEmpty { resourceRepo.getString(R.string.pomodoro_info_no_comment) }
+            resourceRepo.getString(R.string.pomodoro_info_paused_comment, comment)
         }.orEmpty()
 
         return PomodoroInfoState(
@@ -155,26 +161,89 @@ class PomodoroViewDataMapper @Inject constructor(
             },
             isCommentPlaceholder = !hasComment,
             pausedActivity = pausedActivity,
+            pausedComment = pausedComment,
             entryTimes = entryTimes,
             editButtonVisible = activity?.isRunning == true,
-            typeLabel = if (hasActivity) typeName else "-",
-            typeToday = formatDuration(info.typeTodayMs),
-            typeWeek = formatDuration(info.typeWeekMs),
-            allToday = formatDurationWithTotal(info.allTodayMs, info.dayWindowMs),
-            allWeek = formatDurationWithTotal(info.allWeekMs, info.weekWindowMs),
-            ratioToday = mapRatio(info.allTodayMs, info.dayWindowMs),
-            ratioWeek = mapRatio(info.allWeekMs, info.weekWindowMs),
+            rows = mapRows(info, if (hasActivity) typeName else "-"),
+            ratioToday = mapRatio(
+                workedMs = info.workTotalTodayMs,
+                windowMs = info.dayWindowMs,
+                groupsMs = info.workGroups.map { it.todayMs },
+                includeUnutilized = info.includeUnutilized,
+            ),
+            ratioWeek = mapRatio(
+                workedMs = info.workTotalWeekMs,
+                windowMs = info.weekWindowMs,
+                groupsMs = info.workGroups.map { it.weekMs },
+                includeUnutilized = info.includeUnutilized,
+            ),
+            includeUnutilized = info.includeUnutilized,
         )
     }
 
-    private fun mapRatio(workedMs: Long, windowMs: Long): PomodoroInfoState.Ratio {
-        if (windowMs <= 0L) return PomodoroInfoState.Ratio(text = "-", fraction = 0f)
-        val ratio = workedMs.coerceAtLeast(0L).toDouble() / windowMs
-        return PomodoroInfoState.Ratio(
-            text = "${Math.round(ratio * 100)}%",
-            // Tracking outside of working hours can exceed 100%, but chart can't.
-            fraction = ratio.coerceIn(0.0, 1.0).toFloat(),
+    private fun mapRows(
+        info: PomodoroInfo,
+        typeName: String,
+    ): List<PomodoroInfoState.Row> {
+        val result = mutableListOf<PomodoroInfoState.Row>()
+        // Current activity.
+        result += PomodoroInfoState.Row(
+            name = typeName,
+            today = formatHm(info.typeTodayMs),
+            week = formatHm(info.typeWeekMs),
+            color = null,
         )
+        // Work.
+        info.workGroups.forEachIndexed { index, group ->
+            result += PomodoroInfoState.Row(
+                name = group.name ?: resourceRepo.getString(R.string.pomodoro_info_all_activities),
+                today = formatHmWithTotal(group.todayMs, info.dayWindowMs),
+                week = formatHmWithTotal(group.weekMs, info.weekWindowMs),
+                color = getGroupColor(index),
+            )
+        }
+        // Several groups need a total, one is a total already.
+        if (info.workGroups.size > 1) {
+            result += PomodoroInfoState.Row(
+                name = resourceRepo.getString(R.string.pomodoro_info_total),
+                today = formatHmWithTotal(info.workTotalTodayMs, info.dayWindowMs),
+                week = formatHmWithTotal(info.workTotalWeekMs, info.weekWindowMs),
+                color = null,
+                isTotal = true,
+            )
+        }
+        return result
+    }
+
+    private fun mapRatio(
+        workedMs: Long,
+        windowMs: Long,
+        groupsMs: List<Long>,
+        includeUnutilized: Boolean,
+    ): PomodoroInfoState.Ratio {
+        val text = if (windowMs > 0L) {
+            "${Math.round(workedMs.coerceAtLeast(0L).toDouble() / windowMs * 100)}%"
+        } else {
+            "-"
+        }
+
+        // Groups can overlap (an activity is in several categories),
+        // so slices are based on their sum to always fit in the circle.
+        val sum = groupsMs.sumOf { it.coerceAtLeast(0L) }
+        val unutilizedMs = if (includeUnutilized) (windowMs - sum).coerceAtLeast(0L) else 0L
+        val base = (sum + unutilizedMs).toDouble()
+        val slices = if (base > 0) {
+            groupsMs.mapIndexed { index, value ->
+                PomodoroPieSlice((value.coerceAtLeast(0L) / base).toFloat(), getGroupColor(index))
+            } + PomodoroPieSlice((unutilizedMs / base).toFloat(), UNUTILIZED_COLOR)
+        } else {
+            emptyList()
+        }
+        return PomodoroInfoState.Ratio(text = text, slices = slices)
+    }
+
+    private fun getGroupColor(index: Int): Int {
+        return GROUP_COLORS[index % GROUP_COLORS.size]
     }
 
     // 1:23:45
@@ -186,54 +255,15 @@ class PomodoroViewDataMapper @Inject constructor(
         return "$hr:${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}"
     }
 
-    // 1h 25m
-    private fun formatDuration(durationMs: Long): String {
+    // 1:25
+    private fun formatHm(durationMs: Long): String {
         val totalMinutes = TimeUnit.MILLISECONDS.toMinutes(durationMs.coerceAtLeast(0L))
-        val hr = totalMinutes / 60
-        val min = totalMinutes % 60
-        val hrString = resourceRepo.getString(R.string.time_hour)
-        val minString = resourceRepo.getString(R.string.time_minute)
-        return if (hr > 0) "$hr$hrString $min$minString" else "$min$minString"
+        return "${totalMinutes / 60}:${(totalMinutes % 60).toString().padStart(2, '0')}"
     }
 
-    // 3h 10m / 6h 10m
-    private fun formatDurationWithTotal(durationMs: Long, totalMs: Long): String {
-        return "${formatDuration(durationMs)} / ${formatDuration(totalMs)}"
-    }
-
-    // Time on a pause activity is not limited, but the focus time is a reference
-    // for how long is too long: ring fills and background turns from white to red.
-    private fun mapPauseTimerState(
-        elapsedMs: Long,
-        settings: PomodoroCycleSettings,
-        maxProgress: Int,
-        timerUpdateMs: Long,
-    ): PomodoroTimerState {
-        val elapsed = elapsedMs.coerceAtLeast(0L)
-        val fraction = if (settings.focusTimeMs > 0L) {
-            (elapsed.toDouble() / settings.focusTimeMs).coerceIn(0.0, 1.0).toFloat()
-        } else {
-            1f
-        }
-        return PomodoroTimerState(
-            maxProgress = maxProgress,
-            progress = (fraction * maxProgress).toInt(),
-            timerUpdateMs = timerUpdateMs,
-            durationState = mapToDurationState(formatInterval(elapsed)),
-            currentCycleHint = resourceRepo.getString(R.string.pomodoro_info_pause),
-            pauseBackgroundFraction = fraction,
-        )
-    }
-
-    private fun mapToDurationState(
-        data: TimeState,
-    ): PomodoroTimerState.DurationState {
-        return PomodoroTimerState.DurationState(
-            textHours = data.hr.toDuration(),
-            textMinutes = data.min.toDuration(),
-            textSeconds = data.sec.toDuration(),
-            hoursIsVisible = data.hr > 0,
-        )
+    // 3:10 / 6:10
+    private fun formatHmWithTotal(durationMs: Long, totalMs: Long): String {
+        return "${formatHm(durationMs)} / ${formatHm(totalMs)}"
     }
 
     private fun formatInterval(interval: Long): TimeState {
@@ -261,6 +291,18 @@ class PomodoroViewDataMapper @Inject constructor(
             is PomodoroCycleType.Break -> R.string.pomodoro_state_break
             is PomodoroCycleType.LongBreak -> R.string.pomodoro_state_long_break
         }.let(resourceRepo::getString)
+    }
+
+    companion object {
+        private const val UNUTILIZED_COLOR = 0xFF9E9E9E.toInt()
+        private val GROUP_COLORS = listOf(
+            0xFF26A69A.toInt(),
+            0xFFFFA726.toInt(),
+            0xFF42A5F5.toInt(),
+            0xFFAB47BC.toInt(),
+            0xFF9CCC65.toInt(),
+            0xFFEC407A.toInt(),
+        )
     }
 
     private data class TimeState(

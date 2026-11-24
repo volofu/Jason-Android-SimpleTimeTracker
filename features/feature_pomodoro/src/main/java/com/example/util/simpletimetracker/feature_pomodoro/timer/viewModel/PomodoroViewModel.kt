@@ -24,6 +24,7 @@ import com.example.util.simpletimetracker.feature_pomodoro.R
 import com.example.util.simpletimetracker.feature_pomodoro.timer.interactor.PomodoroInfoInteractor
 import com.example.util.simpletimetracker.feature_pomodoro.timer.mapper.PomodoroViewDataMapper
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroButtonState
+import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroInfo
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroInfoState
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroTimerState
 import com.example.util.simpletimetracker.navigation.Router
@@ -66,8 +67,8 @@ class PomodoroViewModel @Inject constructor(
     private var timerJob: Job? = null
     private var infoJob: Job? = null
 
-    // Not null if pomodoro is paused and a pause activity is running.
-    private var pauseActivityStartedMs: Long? = null
+    // Not null if an infinite timer is shown instead of pomodoro cycles.
+    private var countUp: PomodoroInfo.CountUp? = null
 
     fun onVisible() {
         startUpdate()
@@ -76,6 +77,11 @@ class PomodoroViewModel @Inject constructor(
 
     fun onHidden() {
         stopUpdate()
+    }
+
+    fun onIncludeUnutilizedChanged(value: Boolean) = viewModelScope.launch {
+        prefsInteractor.setPomodoroPieIncludeUnutilized(value)
+        updateInfoState()
     }
 
     fun onSettingsClicked() {
@@ -282,7 +288,7 @@ class PomodoroViewModel @Inject constructor(
 
     private suspend fun updateInfoState() {
         val info = pomodoroInfoInteractor.execute()
-        pauseActivityStartedMs = info.pauseActivityStartedMs
+        countUp = info.countUp
         infoState.set(pomodoroViewDataMapper.mapInfoState(info))
     }
 
@@ -310,7 +316,8 @@ class PomodoroViewModel @Inject constructor(
             timePausedMs = prefsInteractor.getPomodoroModePausedTimestampMs(),
             timerUpdateMs = TIMER_UPDATE_MS,
             settings = getPomodoroSettingsInteractor.execute(),
-            pauseElapsedMs = pauseActivityStartedMs?.let { System.currentTimeMillis() - it },
+            countUpElapsedMs = countUp?.let { System.currentTimeMillis() - it.startedMs },
+            countUpIsPause = countUp?.isPause ?: true,
         )
     }
 

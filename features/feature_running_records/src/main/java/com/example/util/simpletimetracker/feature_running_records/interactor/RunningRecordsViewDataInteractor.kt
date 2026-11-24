@@ -26,6 +26,7 @@ import com.example.util.simpletimetracker.feature_base_adapter.emptySpace.EmptyS
 import com.example.util.simpletimetracker.feature_running_records.mapper.RunningRecordsViewDataMapper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.example.util.simpletimetracker.feature_base_adapter.pomodoroButton.PomodoroButtonViewData
 import javax.inject.Inject
 
 class RunningRecordsViewDataInteractor @Inject constructor(
@@ -67,6 +68,7 @@ class RunningRecordsViewDataInteractor @Inject constructor(
         val showPomodoroButton = prefsInteractor.getEnablePomodoroMode()
         val showRepeatButton = prefsInteractor.getEnableRepeatButton()
         val isPomodoroStarted = prefsInteractor.getPomodoroModeStartedTimestampMs() != 0L
+        val isPomodoroPaused = prefsInteractor.getPomodoroModePausedTimestampMs() != 0L
         val retroactiveTrackingModeEnabled = prefsInteractor.getRetroactiveTrackingMode()
         val isFiltersCollapsed = prefsInteractor.getIsActivityFiltersCollapsed()
         val isNavBarAtTheBottom = prefsInteractor.getIsNavBarAtTheBottom()
@@ -203,18 +205,23 @@ class RunningRecordsViewDataInteractor @Inject constructor(
             )
             .let { data ->
                 mutableListOf<ViewHolderType>().apply {
+                    // Pomodoro is always the first, in front of all activities.
+                    if (showPomodoroButton) {
+                        PomodoroButtonViewData(
+                            title = resourceRepo.getString(R.string.running_records_pomodoro),
+                            status = when {
+                                !isPomodoroStarted -> ""
+                                isPomodoroPaused -> resourceRepo.getString(R.string.pomodoro_button_paused)
+                                else -> resourceRepo.getString(R.string.pomodoro_button_running)
+                            },
+                            isActive = isPomodoroStarted,
+                        ).let(::add)
+                    }
                     data.let(::addAll)
                     if (showRepeatButton) {
                         recordTypeViewDataMapper.mapToRepeatItem(
                             numberOfCards = numberOfCards,
                             isDarkTheme = isDarkTheme,
-                        ).let(::add)
-                    }
-                    if (showPomodoroButton) {
-                        recordTypeViewDataMapper.mapToPomodoroItem(
-                            numberOfCards = numberOfCards,
-                            isDarkTheme = isDarkTheme,
-                            isPomodoroStarted = isPomodoroStarted,
                         ).let(::add)
                     }
                     recordTypeViewDataMapper.mapToAddItem(

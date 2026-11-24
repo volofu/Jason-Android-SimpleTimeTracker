@@ -3,6 +3,7 @@ package com.example.util.simpletimetracker.feature_pomodoro.timer.view
 import android.animation.ValueAnimator
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.Typeface
 import android.widget.TextView
 import android.view.LayoutInflater
 import android.view.View
@@ -18,6 +19,7 @@ import com.example.util.simpletimetracker.core.utils.InsetConfiguration
 import com.example.util.simpletimetracker.domain.record.model.RecordBase
 import com.example.util.simpletimetracker.feature_dialogs.api.TypesSelectionDialogListener
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroButtonState
+import com.example.util.simpletimetracker.feature_pomodoro.databinding.PomodoroStatsRowBinding
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroInfoState
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroTimerState
 import com.example.util.simpletimetracker.feature_pomodoro.timer.viewModel.PomodoroViewModel
@@ -46,6 +48,7 @@ class PomodoroFragment :
     // Views can be recreated, so they are not held strongly.
     private val defaultTextColors = WeakHashMap<TextView, ColorStateList>()
     private var pauseBackgroundApplied: Boolean = false
+    private var pauseTextColor: Int? = null
 
     override fun initUx() = with(binding) {
         btnPomodoroSettings.setOnClick(viewModel::onSettingsClicked)
@@ -88,17 +91,49 @@ class PomodoroFragment :
         tvPomodoroComment.alpha = if (state.isCommentPlaceholder) 0.5f else 1f
         tvPomodoroPausedTask.text = state.pausedActivity
         tvPomodoroPausedTask.visible = state.pausedActivity.isNotEmpty()
+        tvPomodoroPausedComment.text = state.pausedComment
+        tvPomodoroPausedComment.visible = state.pausedComment.isNotEmpty()
         tvPomodoroEntryTimes.text = state.entryTimes
         btnPomodoroEditEntry.visible = state.editButtonVisible
-        tvPomodoroStatsTypeLabel.text = state.typeLabel
-        tvPomodoroStatsTypeToday.text = state.typeToday
-        tvPomodoroStatsTypeWeek.text = state.typeWeek
-        tvPomodoroStatsAllToday.text = state.allToday
-        tvPomodoroStatsAllWeek.text = state.allWeek
+
+        containerPomodoroStatsRows.removeAllViews()
+        state.rows.forEach { row ->
+            val rowBinding = PomodoroStatsRowBinding.inflate(layoutInflater, containerPomodoroStatsRows, false)
+            rowBinding.tvPomodoroStatsName.text = row.name
+            rowBinding.tvPomodoroStatsToday.text = row.today
+            rowBinding.tvPomodoroStatsWeek.text = row.week
+            row.color?.let { color ->
+                rowBinding.viewPomodoroStatsDot.isInvisible = false
+                rowBinding.viewPomodoroStatsDot.backgroundTintList = ColorStateList.valueOf(color)
+            }
+            if (row.isTotal) {
+                listOf(
+                    rowBinding.tvPomodoroStatsName,
+                    rowBinding.tvPomodoroStatsToday,
+                    rowBinding.tvPomodoroStatsWeek,
+                ).forEach { it.setTypeface(it.typeface, Typeface.BOLD) }
+            }
+            containerPomodoroStatsRows.addView(rowBinding.root)
+        }
+
         tvPomodoroRatioToday.text = state.ratioToday.text
-        piePomodoroRatioToday.fraction = state.ratioToday.fraction
+        piePomodoroRatioToday.slices = state.ratioToday.slices
         tvPomodoroRatioWeek.text = state.ratioWeek.text
-        piePomodoroRatioWeek.fraction = state.ratioWeek.fraction
+        piePomodoroRatioWeek.slices = state.ratioWeek.slices
+        // Listener is removed to not trigger it by state update.
+        cbPomodoroUnutilized.setOnCheckedChangeListener(null)
+        cbPomodoroUnutilized.isChecked = state.includeUnutilized
+        cbPomodoroUnutilized.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.onIncludeUnutilizedChanged(isChecked)
+        }
+
+        // New rows should get the same text color as the others.
+        pauseTextColor?.let { color ->
+            collectTextViews(root).forEach { view ->
+                if (view !in defaultTextColors) defaultTextColors[view] = view.textColors
+                view.setTextColor(color)
+            }
+        }
     }
 
     private fun setButtonState(state: PomodoroButtonState) = with(binding) {
@@ -152,6 +187,7 @@ class PomodoroFragment :
     private fun setPauseBackground(fraction: Float?) = with(binding) {
         val textViews = collectTextViews(root)
         if (fraction == null) {
+            pauseTextColor = null
             if (pauseBackgroundApplied) {
                 pauseBackgroundApplied = false
                 root.background = null
@@ -166,6 +202,7 @@ class PomodoroFragment :
             Color.WHITE
         }
         pauseBackgroundApplied = true
+        pauseTextColor = textColor
         root.setBackgroundColor(background)
         textViews.forEach { view ->
             if (view !in defaultTextColors) defaultTextColors[view] = view.textColors

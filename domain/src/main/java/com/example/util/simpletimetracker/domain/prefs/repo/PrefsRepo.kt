@@ -102,6 +102,17 @@ interface PrefsRepo {
     // Format: "startMin-endMin" for every day, Sunday first, joined by ",". Empty - default.
     var pomodoroWorkSchedule: String
 
+    // Activities and categories (their activities) that count as work in pomodoro statistics.
+    var pomodoroWorkActivities: Set<String>
+
+    var pomodoroWorkCategories: Set<String>
+
+    // Pie chart in pomodoro statistics: show a slice for work hours that were not used.
+    var pomodoroPieIncludeUnutilized: Boolean
+
+    // Show count-up timer screen for activities without pomodoro during work hours.
+    var pomodoroCountUpDuringWorkHours: Boolean
+
     // Start of the current pomodoro entry. Unlike started timestamp it is not shifted by pauses.
     var pomodoroEntryStartedTimestamp: Long // in milliseconds, 0 - disabled
 

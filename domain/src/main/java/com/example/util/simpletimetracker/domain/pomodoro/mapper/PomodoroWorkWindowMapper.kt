@@ -50,6 +50,22 @@ class PomodoroWorkWindowMapper @Inject constructor() {
         return result
     }
 
+    /**
+     * If [nowMs] is inside of working hours of its day.
+     */
+    fun isWithinWindow(
+        nowMs: Long,
+        schedule: PomodoroWorkSchedule,
+        timeZone: TimeZone = TimeZone.getDefault(),
+    ): Boolean {
+        val calendar = Calendar.getInstance(timeZone).apply { timeInMillis = nowMs }
+        val window = schedule.get(calendar.getDayOfWeek())
+        val minute = calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE)
+        return window.endMinute > window.startMinute &&
+            minute >= window.startMinute &&
+            minute < window.endMinute
+    }
+
     private fun Calendar.getDayOfWeek(): DayOfWeek {
         // Calendar.SUNDAY is 1.
         return DayOfWeek.entries[get(Calendar.DAY_OF_WEEK) - 1]

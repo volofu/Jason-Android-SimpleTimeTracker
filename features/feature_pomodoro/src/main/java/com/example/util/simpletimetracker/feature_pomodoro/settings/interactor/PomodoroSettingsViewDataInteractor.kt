@@ -114,6 +114,34 @@ class PomodoroSettingsViewDataInteractor @Inject constructor(
             backgroundIsVisible = false,
         )
 
+        result += SettingsSelectorViewData(
+            block = SettingsBlock.PomodoroWorkCategories,
+            title = resourceRepo.getString(R.string.pomodoro_settings_work_categories),
+            subtitle = "",
+            selectedValue = mapWorkCount(prefsInteractor.getPomodoroWorkCategories().size),
+            bottomSpaceIsVisible = true,
+            dividerIsVisible = false,
+            backgroundIsVisible = false,
+        )
+        result += SettingsSelectorViewData(
+            block = SettingsBlock.PomodoroWorkActivities,
+            title = resourceRepo.getString(R.string.pomodoro_settings_work_activities),
+            subtitle = "",
+            selectedValue = mapWorkCount(prefsInteractor.getPomodoroWorkActivities().size),
+            bottomSpaceIsVisible = true,
+            dividerIsVisible = false,
+            backgroundIsVisible = false,
+        )
+        result += SettingsCheckboxViewData(
+            block = SettingsBlock.PomodoroCountUp,
+            title = resourceRepo.getString(R.string.pomodoro_settings_count_up),
+            subtitle = resourceRepo.getString(R.string.pomodoro_settings_count_up_hint),
+            isChecked = prefsInteractor.getPomodoroCountUpDuringWorkHours(),
+            bottomSpaceIsVisible = true,
+            dividerIsVisible = false,
+            backgroundIsVisible = false,
+        )
+
         result += loadScheduleViewData()
 
         return result
@@ -136,6 +164,14 @@ class PomodoroSettingsViewDataInteractor @Inject constructor(
                 end = window?.let { formatMinute(it.endMinute, useMilitaryTime) } ?: mixed,
                 dividerIsVisible = false,
             )
+        }
+    }
+
+    private fun mapWorkCount(count: Int): String {
+        return if (count == 0) {
+            resourceRepo.getString(R.string.pomodoro_settings_work_none)
+        } else {
+            resourceRepo.getString(R.string.pomodoro_settings_work_count, count)
         }
     }
 
