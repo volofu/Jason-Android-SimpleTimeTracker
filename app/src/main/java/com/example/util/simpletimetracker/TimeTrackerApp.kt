@@ -35,8 +35,9 @@ class TimeTrackerApp : Application() {
             StrictMode.setThreadPolicy(
                 StrictMode.ThreadPolicy.Builder()
                     .detectAll()
+                    // Violations are still logged, but no dialog on the phone:
+                    // debug builds are used as a daily driver.
                     .penaltyLog()
-                    .penaltyDialog()
                     .build(),
             )
             StrictMode.setVmPolicy(
