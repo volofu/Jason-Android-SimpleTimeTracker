@@ -16,13 +16,15 @@ jobs:
           distribution: 'zulu'
           java-version: '21'
 
-      - name: Build
-        run: ./gradlew assemblePlayDebug
-
       - name: Domain unit tests
         # Does not block the APK.
         continue-on-error: true
-        run: ./gradlew :domain:test --stacktrace
+        run: |
+          set -o pipefail
+          ./gradlew :domain:test --console=plain 2>&1 | grep -E "Test.* FAILED|AssertionError|ComparisonFailure|Exception:|expected:|tests completed" | head -60
+
+      - name: Build
+        run: ./gradlew assemblePlayDebug
 
       - name: Upload
         uses: actions/upload-artifact@v4
