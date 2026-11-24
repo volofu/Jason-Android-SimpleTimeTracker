@@ -426,6 +426,7 @@ class AddRunningRecordMediatorTest {
             updateNotificationSwitch = any(),
             timeEnded = anyOrNull(),
             requestId = anyOrNull(),
+            checkPomodoroStop = any(),
         )
     }
 
@@ -453,6 +454,7 @@ class AddRunningRecordMediatorTest {
             updateNotificationSwitch = eq(false),
             timeEnded = eq(currentTime),
             requestId = anyOrNull(),
+            checkPomodoroStop = any(),
         )
         verify(removeRunningRecordMediator).removeWithRecordAdd(
             runningRecord = eq(runningRecords[1]),
@@ -460,6 +462,7 @@ class AddRunningRecordMediatorTest {
             updateNotificationSwitch = eq(false),
             timeEnded = eq(currentTime),
             requestId = anyOrNull(),
+            checkPomodoroStop = any(),
         )
     }
 
@@ -527,6 +530,7 @@ class AddRunningRecordMediatorTest {
             updateNotificationSwitch = any(),
             timeEnded = anyOrNull(),
             requestId = anyOrNull(),
+            checkPomodoroStop = any(),
         )
     }
 
@@ -567,6 +571,7 @@ class AddRunningRecordMediatorTest {
             updateNotificationSwitch = any(),
             timeEnded = anyOrNull(),
             requestId = anyOrNull(),
+            checkPomodoroStop = any(),
         )
     }
 
@@ -607,6 +612,7 @@ class AddRunningRecordMediatorTest {
             updateNotificationSwitch = eq(false),
             timeEnded = eq(currentTime),
             requestId = anyOrNull(),
+            checkPomodoroStop = any(),
         )
         verify(removeRunningRecordMediator, never()).removeWithRecordAdd(
             runningRecord = eq(runningRecords[1]),
@@ -614,6 +620,7 @@ class AddRunningRecordMediatorTest {
             updateNotificationSwitch = any(),
             timeEnded = anyOrNull(),
             requestId = anyOrNull(),
+            checkPomodoroStop = any(),
         )
     }
 
