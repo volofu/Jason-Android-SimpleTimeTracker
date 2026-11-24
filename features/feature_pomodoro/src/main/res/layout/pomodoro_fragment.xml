@@ -315,16 +315,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" />
-
-        <androidx.appcompat.widget.AppCompatCheckBox
-            android:id="@+id/cbPomodoroUnutilized"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:fontFamily="sans-serif-condensed"
-            android:text="@string/pomodoro_info_include_unutilized"
-            android:textColor="?appTextHintColor"
-            android:textSize="13sp" />
-
     </LinearLayout>
 
     <com.google.android.material.progressindicator.CircularProgressIndicator

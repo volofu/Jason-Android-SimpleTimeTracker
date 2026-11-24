@@ -105,13 +105,11 @@ class PomodoroFragment :
         bindRows(containerPomodoroStatsRows, state.compactRows, expanded = false)
         bindRows(containerPomodoroExpandedRows, state.expandedRows, expanded = true)
 
-        listOf(cbPomodoroUnutilized, cbPomodoroUnutilizedExpanded).forEach { checkBox ->
-            // Listener is removed to not trigger it by state update.
-            checkBox.setOnCheckedChangeListener(null)
-            checkBox.isChecked = state.includeUnutilized
-            checkBox.setOnCheckedChangeListener { _, isChecked ->
-                viewModel.onIncludeUnutilizedChanged(isChecked)
-            }
+        // Listener is removed to not trigger it by state update.
+        cbPomodoroUnutilizedExpanded.setOnCheckedChangeListener(null)
+        cbPomodoroUnutilizedExpanded.isChecked = state.includeUnutilized
+        cbPomodoroUnutilizedExpanded.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.onIncludeUnutilizedChanged(isChecked)
         }
 
         // New rows should get the same text color as the others.
