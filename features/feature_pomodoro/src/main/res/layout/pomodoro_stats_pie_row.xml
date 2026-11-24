@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:minHeight="28dp"
+    android:orientation="horizontal"
+    android:paddingVertical="2dp">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/ivPomodoroStatsIcon"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginEnd="-12dp"
+        android:visibility="gone"
+        app:tint="?colorSecondary"
+        tools:srcCompat="@drawable/pomodoro_break_cup"
+        tools:visibility="visible" />
+
+    <View
+        android:layout_width="8dp"
+        android:layout_height="8dp"
+        android:visibility="invisible" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvPomodoroStatsName"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:fontFamily="sans-serif-condensed"
+        android:maxLines="1"
+        android:textColor="?appTextPrimaryColor"
+        android:textSize="15sp"
+        tools:text="Worked vs. work hours" />
+
+    <LinearLayout
+        android:layout_width="104dp"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical|end"
+        android:orientation="horizontal">
+
+        <com.example.util.simpletimetracker.feature_pomodoro.timer.view.PomodoroPieView
+            android:id="@+id/pieToday"
+            android:layout_width="22dp"
+            android:layout_height="22dp" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvPomodoroStatsToday"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:fontFamily="sans-serif-condensed"
+            android:textColor="?appTextPrimaryColor"
+            android:textSize="15sp"
+            tools:text="62%" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="104dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:gravity="center_vertical|end"
+        android:orientation="horizontal">
+
+        <com.example.util.simpletimetracker.feature_pomodoro.timer.view.PomodoroPieView
+            android:id="@+id/pieWeek"
+            android:layout_width="22dp"
+            android:layout_height="22dp" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvPomodoroStatsWeek"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:fontFamily="sans-serif-condensed"
+            android:textColor="?appTextPrimaryColor"
+            android:textSize="15sp"
+            tools:text="48%" />
+
+    </LinearLayout>
+
+</LinearLayout>

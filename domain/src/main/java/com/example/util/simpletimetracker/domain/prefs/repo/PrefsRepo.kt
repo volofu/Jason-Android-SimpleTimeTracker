@@ -113,6 +113,15 @@ interface PrefsRepo {
     // Show count-up timer screen for activities without pomodoro during work hours.
     var pomodoroCountUpDuringWorkHours: Boolean
 
+    // Finished pomodoro cycles, see PomodoroCycleLogMapper.
+    var pomodoroCycleLog: String
+
+    // Time in the current pomodoro (without pauses) up to which the cycles are in the log.
+    var pomodoroLoggedVirtualTime: Long // in milliseconds
+
+    // Activity category with activities that are real breaks.
+    var pomodoroBreakCategoryId: Long // 0 - not created yet
+
     // Start of the current pomodoro entry. Unlike started timestamp it is not shifted by pauses.
     var pomodoroEntryStartedTimestamp: Long // in milliseconds, 0 - disabled
 

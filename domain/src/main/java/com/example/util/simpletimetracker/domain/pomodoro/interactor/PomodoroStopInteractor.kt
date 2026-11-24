@@ -8,14 +8,18 @@ class PomodoroStopInteractor @Inject constructor(
     private val prefsInteractor: PrefsInteractor,
     private val runningRecordInteractor: RunningRecordInteractor,
     private val pomodoroCycleNotificationInteractor: PomodoroCycleNotificationInteractor,
+    private val pomodoroCycleLogInteractor: PomodoroCycleLogInteractor,
 ) {
 
     suspend fun stop() {
+        // Unfinished cycle is logged as cut short.
+        pomodoroCycleLogInteractor.sync(cutShort = true)
         prefsInteractor.setPomodoroModeStartedTimestampMs(0)
         prefsInteractor.setPomodoroModePausedTimestampMs(0)
         prefsInteractor.setPomodoroEntryStartedTimestampMs(0)
         prefsInteractor.setPomodoroPauseTotalMs(0)
         prefsInteractor.setPomodoroResumeTypeId(0)
+        pomodoroCycleLogInteractor.reset()
         pomodoroCycleNotificationInteractor.cancel()
     }
 

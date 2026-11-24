@@ -4,4 +4,6 @@ data class TypesSelectionDialogViewData(
     val title: String,
     val subtitle: String,
     val isButtonsVisible: Boolean,
+    // Empty - not visible.
+    val showExcludedTypesButtonText: String = "",
 )

@@ -37,6 +37,7 @@ class PomodoroInfoInteractor @Inject constructor(
     private val categoryInteractor: CategoryInteractor,
     private val recordTypeCategoryInteractor: RecordTypeCategoryInteractor,
     private val resourceRepo: ResourceRepo,
+    private val pomodoroStatsInteractor: PomodoroStatsInteractor,
 ) {
 
     suspend fun execute(): PomodoroInfo {
@@ -131,6 +132,7 @@ class PomodoroInfoInteractor @Inject constructor(
             workTotalTodayMs = pomodoroTrackedTimeMapper.mapTrackedTime(workIntervals, dayRange),
             workTotalWeekMs = pomodoroTrackedTimeMapper.mapTrackedTime(workIntervals, weekRange),
             includeUnutilized = prefsInteractor.getPomodoroPieIncludeUnutilized(),
+            stats = pomodoroStatsInteractor.execute(allIntervals, dayRange, weekRange),
             dayWindowMs = pomodoroWorkWindowMapper.mapElapsed(dayRange, now, startOfDayShift, schedule),
             weekWindowMs = pomodoroWorkWindowMapper.mapElapsed(weekRange, now, startOfDayShift, schedule),
         )

@@ -277,10 +277,17 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <Space
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/btnPomodoroExpand"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1" />
+                android:layout_height="28dp"
+                android:layout_weight="1"
+                android:background="?selectableItemBackground"
+                android:contentDescription="@string/pomodoro_info_expand"
+                android:padding="4dp"
+                android:scaleType="fitStart"
+                app:srcCompat="@drawable/pomodoro_expand"
+                app:tint="?appTextHintColor" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:layout_width="104dp"
@@ -308,74 +315,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:minHeight="28dp"
-            android:orientation="horizontal"
-            android:paddingVertical="2dp">
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:ellipsize="end"
-                android:fontFamily="sans-serif-condensed"
-                android:maxLines="1"
-                android:text="@string/pomodoro_info_work_ratio"
-                android:textColor="?appTextPrimaryColor"
-                android:textSize="15sp" />
-
-            <LinearLayout
-                android:layout_width="104dp"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical|end"
-                android:orientation="horizontal">
-
-                <com.example.util.simpletimetracker.feature_pomodoro.timer.view.PomodoroPieView
-                    android:id="@+id/piePomodoroRatioToday"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp" />
-
-                <androidx.appcompat.widget.AppCompatTextView
-                    android:id="@+id/tvPomodoroRatioToday"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:fontFamily="sans-serif-condensed"
-                    android:textColor="?appTextPrimaryColor"
-                    android:textSize="15sp"
-                    tools:text="62%" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="104dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:gravity="center_vertical|end"
-                android:orientation="horizontal">
-
-                <com.example.util.simpletimetracker.feature_pomodoro.timer.view.PomodoroPieView
-                    android:id="@+id/piePomodoroRatioWeek"
-                    android:layout_width="22dp"
-                    android:layout_height="22dp" />
-
-                <androidx.appcompat.widget.AppCompatTextView
-                    android:id="@+id/tvPomodoroRatioWeek"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:fontFamily="sans-serif-condensed"
-                    android:textColor="?appTextPrimaryColor"
-                    android:textSize="15sp"
-                    tools:text="48%" />
-
-            </LinearLayout>
-
-        </LinearLayout>
 
         <androidx.appcompat.widget.AppCompatCheckBox
             android:id="@+id/cbPomodoroUnutilized"
@@ -526,5 +465,85 @@
             app:srcCompat="@drawable/button_next" />
 
     </androidx.cardview.widget.CardView>
+
+    <ScrollView
+        android:id="@+id/scrollPomodoroExpanded"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="?appBackgroundColor"
+        android:clickable="true"
+        android:elevation="8dp"
+        android:focusable="true"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="32dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/btnPomodoroCollapse"
+                    android:layout_width="0dp"
+                    android:layout_height="28dp"
+                    android:layout_weight="1"
+                    android:background="?selectableItemBackground"
+                    android:contentDescription="@string/pomodoro_info_collapse"
+                    android:padding="4dp"
+                    android:scaleType="fitStart"
+                    app:srcCompat="@drawable/pomodoro_collapse"
+                    app:tint="?appTextHintColor" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:layout_width="104dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-condensed"
+                    android:gravity="end"
+                    android:text="@string/pomodoro_info_today"
+                    android:textColor="?appTextHintColor"
+                    android:textSize="13sp" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:layout_width="104dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:fontFamily="sans-serif-condensed"
+                    android:gravity="end"
+                    android:text="@string/pomodoro_info_week"
+                    android:textColor="?appTextHintColor"
+                    android:textSize="13sp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/containerPomodoroExpandedRows"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <androidx.appcompat.widget.AppCompatCheckBox
+                android:id="@+id/cbPomodoroUnutilizedExpanded"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-condensed"
+                android:text="@string/pomodoro_info_include_unutilized"
+                android:textColor="?appTextHintColor"
+                android:textSize="13sp" />
+
+        </LinearLayout>
+
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

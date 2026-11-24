@@ -91,6 +91,7 @@ class TypesSelectionDialogFragment :
         btnTypesSelectionShowAll.setOnClick(viewModel::onShowAllClick)
         btnTypesSelectionHideAll.setOnClick(viewModel::onHideAllClick)
         btnTypesSelectionSave.setOnClick(viewModel::onSaveClick)
+        btnTypesSelectionShowExcluded.setOnClick(viewModel::onShowExcludedTypesClick)
     }
 
     override fun initViewModel(): Unit = with(viewModel) {
@@ -122,6 +123,8 @@ class TypesSelectionDialogFragment :
         tvTypesSelectionDialogSubtitle.setTextOptional(data.subtitle)
         viewTypesSelectionDialogDivider.isVisible = data.title.isNotEmpty() || data.subtitle.isNotEmpty()
         containerTypesSelectionButtons.isVisible = data.isButtonsVisible
+        btnTypesSelectionShowExcluded.isVisible = data.showExcludedTypesButtonText.isNotEmpty()
+        btnTypesSelectionShowExcluded.text = data.showExcludedTypesButtonText
     }
 
     private fun onDataSelected(result: TypesSelectionResult) {

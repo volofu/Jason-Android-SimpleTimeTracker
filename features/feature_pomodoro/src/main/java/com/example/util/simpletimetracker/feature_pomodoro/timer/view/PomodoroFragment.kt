@@ -19,10 +19,13 @@ import com.example.util.simpletimetracker.core.utils.InsetConfiguration
 import com.example.util.simpletimetracker.domain.record.model.RecordBase
 import com.example.util.simpletimetracker.feature_dialogs.api.TypesSelectionDialogListener
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroButtonState
+import com.example.util.simpletimetracker.feature_pomodoro.databinding.PomodoroStatsPieRowBinding
 import com.example.util.simpletimetracker.feature_pomodoro.databinding.PomodoroStatsRowBinding
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroInfoState
 import com.example.util.simpletimetracker.feature_pomodoro.timer.model.PomodoroTimerState
 import com.example.util.simpletimetracker.feature_pomodoro.timer.viewModel.PomodoroViewModel
+import com.example.util.simpletimetracker.feature_pomodoro.R
+import com.example.util.simpletimetracker.feature_views.extension.getThemedAttr
 import com.example.util.simpletimetracker.feature_views.extension.setOnClick
 import com.example.util.simpletimetracker.feature_views.extension.visible
 import dagger.hilt.android.AndroidEntryPoint
@@ -58,12 +61,15 @@ class PomodoroFragment :
         btnPomodoroPrev.setOnClick(viewModel::onPrevClicked)
         btnPomodoroNext.setOnClick(viewModel::onNextClicked)
         btnPomodoroEditEntry.setOnClick(viewModel::onEditEntryClicked)
+        btnPomodoroExpand.setOnClick(viewModel::onExpandClicked)
+        btnPomodoroCollapse.setOnClick(viewModel::onExpandClicked)
     }
 
     override fun initViewModel() = with(viewModel) {
         buttonState.observe(::setButtonState)
         timerState.observe(::setTimerState)
         infoState.observe(::setInfoState)
+        statsExpanded.observe { binding.scrollPomodoroExpanded.visible = it }
     }
 
     override fun onResume() {
@@ -96,35 +102,16 @@ class PomodoroFragment :
         tvPomodoroEntryTimes.text = state.entryTimes
         btnPomodoroEditEntry.visible = state.editButtonVisible
 
-        containerPomodoroStatsRows.removeAllViews()
-        state.rows.forEach { row ->
-            val rowBinding = PomodoroStatsRowBinding.inflate(layoutInflater, containerPomodoroStatsRows, false)
-            rowBinding.tvPomodoroStatsName.text = row.name
-            rowBinding.tvPomodoroStatsToday.text = row.today
-            rowBinding.tvPomodoroStatsWeek.text = row.week
-            row.color?.let { color ->
-                rowBinding.viewPomodoroStatsDot.isInvisible = false
-                rowBinding.viewPomodoroStatsDot.backgroundTintList = ColorStateList.valueOf(color)
-            }
-            if (row.isTotal) {
-                listOf(
-                    rowBinding.tvPomodoroStatsName,
-                    rowBinding.tvPomodoroStatsToday,
-                    rowBinding.tvPomodoroStatsWeek,
-                ).forEach { it.setTypeface(it.typeface, Typeface.BOLD) }
-            }
-            containerPomodoroStatsRows.addView(rowBinding.root)
-        }
+        bindRows(containerPomodoroStatsRows, state.compactRows, expanded = false)
+        bindRows(containerPomodoroExpandedRows, state.expandedRows, expanded = true)
 
-        tvPomodoroRatioToday.text = state.ratioToday.text
-        piePomodoroRatioToday.slices = state.ratioToday.slices
-        tvPomodoroRatioWeek.text = state.ratioWeek.text
-        piePomodoroRatioWeek.slices = state.ratioWeek.slices
-        // Listener is removed to not trigger it by state update.
-        cbPomodoroUnutilized.setOnCheckedChangeListener(null)
-        cbPomodoroUnutilized.isChecked = state.includeUnutilized
-        cbPomodoroUnutilized.setOnCheckedChangeListener { _, isChecked ->
-            viewModel.onIncludeUnutilizedChanged(isChecked)
+        listOf(cbPomodoroUnutilized, cbPomodoroUnutilizedExpanded).forEach { checkBox ->
+            // Listener is removed to not trigger it by state update.
+            checkBox.setOnCheckedChangeListener(null)
+            checkBox.isChecked = state.includeUnutilized
+            checkBox.setOnCheckedChangeListener { _, isChecked ->
+                viewModel.onIncludeUnutilizedChanged(isChecked)
+            }
         }
 
         // New rows should get the same text color as the others.
@@ -133,6 +120,62 @@ class PomodoroFragment :
                 if (view !in defaultTextColors) defaultTextColors[view] = view.textColors
                 view.setTextColor(color)
             }
+        }
+    }
+
+    private fun bindRows(
+        container: ViewGroup,
+        rows: List<PomodoroInfoState.Row>,
+        expanded: Boolean,
+    ) {
+        container.removeAllViews()
+        rows.forEach { row ->
+            val isPie = row.todayPie != null || row.weekPie != null
+            val rowView = if (isPie) {
+                val rowBinding = PomodoroStatsPieRowBinding.inflate(layoutInflater, container, false)
+                rowBinding.tvPomodoroStatsName.text = row.name
+                rowBinding.tvPomodoroStatsToday.text = row.today
+                rowBinding.tvPomodoroStatsWeek.text = row.week
+                rowBinding.pieToday.slices = row.todayPie.orEmpty()
+                rowBinding.pieWeek.slices = row.weekPie.orEmpty()
+                bindRowIcon(rowBinding.ivPomodoroStatsIcon, rowBinding.tvPomodoroStatsName, row, expanded)
+                rowBinding.root
+            } else {
+                val rowBinding = PomodoroStatsRowBinding.inflate(layoutInflater, container, false)
+                rowBinding.tvPomodoroStatsName.text = row.name
+                rowBinding.tvPomodoroStatsToday.text = row.today
+                rowBinding.tvPomodoroStatsWeek.text = row.week
+                row.color?.let { color ->
+                    rowBinding.viewPomodoroStatsDot.isInvisible = false
+                    rowBinding.viewPomodoroStatsDot.backgroundTintList = ColorStateList.valueOf(color)
+                }
+                bindRowIcon(rowBinding.ivPomodoroStatsIcon, rowBinding.tvPomodoroStatsName, row, expanded)
+                if (row.isTotal) {
+                    listOf(
+                        rowBinding.tvPomodoroStatsName,
+                        rowBinding.tvPomodoroStatsToday,
+                        rowBinding.tvPomodoroStatsWeek,
+                    ).forEach { it.setTypeface(it.typeface, Typeface.BOLD) }
+                }
+                rowBinding.root
+            }
+            container.addView(rowView)
+        }
+    }
+
+    // Icon is enough to understand a row on the main screen, names are shown in the full statistics.
+    private fun bindRowIcon(
+        icon: androidx.appcompat.widget.AppCompatImageView,
+        name: TextView,
+        row: PomodoroInfoState.Row,
+        expanded: Boolean,
+    ) {
+        row.iconResId?.let {
+            icon.setImageResource(it)
+            icon.visible = true
+            // Occupies the place of the dot.
+            icon.layoutParams = (icon.layoutParams as ViewGroup.MarginLayoutParams).apply { marginEnd = 0 }
+            name.visibility = if (expanded) View.VISIBLE else View.INVISIBLE
         }
     }
 
@@ -191,6 +234,7 @@ class PomodoroFragment :
             if (pauseBackgroundApplied) {
                 pauseBackgroundApplied = false
                 root.background = null
+                scrollPomodoroExpanded.setBackgroundColor(requireContext().getThemedAttr(R.attr.appBackgroundColor))
                 textViews.forEach { view -> defaultTextColors[view]?.let(view::setTextColor) }
             }
             return@with
@@ -204,6 +248,7 @@ class PomodoroFragment :
         pauseBackgroundApplied = true
         pauseTextColor = textColor
         root.setBackgroundColor(background)
+        scrollPomodoroExpanded.setBackgroundColor(background)
         textViews.forEach { view ->
             if (view !in defaultTextColors) defaultTextColors[view] = view.textColors
             view.setTextColor(textColor)

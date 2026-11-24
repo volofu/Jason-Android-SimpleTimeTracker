@@ -12,6 +12,7 @@ class PomodoroNextCycleInteractor @Inject constructor(
     private val getPomodoroStateInteractor: GetPomodoroStateInteractor,
     private val getPomodoroSettingsInteractor: GetPomodoroSettingsInteractor,
     private val pomodoroCycleNotificationInteractor: PomodoroCycleNotificationInteractor,
+    private val pomodoroCycleLogInteractor: PomodoroCycleLogInteractor,
 ) {
 
     suspend fun executePrev() {
@@ -30,6 +31,7 @@ class PomodoroNextCycleInteractor @Inject constructor(
             cycleType = result.prevCycleType,
             settings = settings,
         )
+        pomodoroCycleLogInteractor.sync(cutShort = true)
         var newTimeStarted = timeStartedMs +
             result.currentCycleDurationMs +
             prevCycleDurationMs + 1 // Just in case.
@@ -39,6 +41,7 @@ class PomodoroNextCycleInteractor @Inject constructor(
         }
 
         prefsInteractor.setPomodoroModeStartedTimestampMs(newTimeStarted)
+        pomodoroCycleLogInteractor.onTimelineChanged()
 
         pomodoroCycleNotificationInteractor.checkAndReschedule()
     }
@@ -58,11 +61,13 @@ class PomodoroNextCycleInteractor @Inject constructor(
             cycleType = result.cycleType,
             settings = settings,
         )
+        pomodoroCycleLogInteractor.sync(cutShort = true)
         val newTimeStarted = timeStartedMs +
             result.currentCycleDurationMs -
             cycleDurationMs + 1 // Just in case.
 
         prefsInteractor.setPomodoroModeStartedTimestampMs(newTimeStarted)
+        pomodoroCycleLogInteractor.onTimelineChanged()
 
         pomodoroCycleNotificationInteractor.checkAndReschedule()
     }

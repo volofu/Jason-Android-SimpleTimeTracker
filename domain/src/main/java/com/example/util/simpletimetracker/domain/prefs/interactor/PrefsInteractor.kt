@@ -520,6 +520,30 @@ class PrefsInteractor @Inject constructor(
         prefsRepo.pomodoroCountUpDuringWorkHours = value
     }
 
+    suspend fun getPomodoroCycleLog(): String = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroCycleLog
+    }
+
+    suspend fun setPomodoroCycleLog(value: String) = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroCycleLog = value
+    }
+
+    suspend fun getPomodoroLoggedVirtualTimeMs(): Long = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroLoggedVirtualTime
+    }
+
+    suspend fun setPomodoroLoggedVirtualTimeMs(value: Long) = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroLoggedVirtualTime = value
+    }
+
+    suspend fun getPomodoroBreakCategoryId(): Long = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroBreakCategoryId
+    }
+
+    suspend fun setPomodoroBreakCategoryId(value: Long) = withContext(Dispatchers.IO) {
+        prefsRepo.pomodoroBreakCategoryId = value
+    }
+
     suspend fun getPomodoroWorkSchedule(): String = withContext(Dispatchers.IO) {
         prefsRepo.pomodoroWorkSchedule
     }

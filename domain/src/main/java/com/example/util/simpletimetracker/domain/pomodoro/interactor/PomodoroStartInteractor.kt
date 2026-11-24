@@ -7,6 +7,7 @@ class PomodoroStartInteractor @Inject constructor(
     private val prefsInteractor: PrefsInteractor,
     private val getPomodoroStateInteractor: GetPomodoroStateInteractor,
     private val pomodoroCycleNotificationInteractor: PomodoroCycleNotificationInteractor,
+    private val pomodoroCycleLogInteractor: PomodoroCycleLogInteractor,
 ) {
 
     suspend fun start() {
@@ -16,6 +17,7 @@ class PomodoroStartInteractor @Inject constructor(
         prefsInteractor.setPomodoroEntryStartedTimestampMs(current)
         prefsInteractor.setPomodoroPauseTotalMs(0)
         prefsInteractor.setPomodoroResumeTypeId(0)
+        pomodoroCycleLogInteractor.reset()
         pomodoroCycleNotificationInteractor.checkAndReschedule()
     }
 

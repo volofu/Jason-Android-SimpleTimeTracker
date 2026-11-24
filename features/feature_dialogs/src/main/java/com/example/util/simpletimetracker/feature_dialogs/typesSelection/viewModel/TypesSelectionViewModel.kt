@@ -58,6 +58,7 @@ class TypesSelectionViewModel @Inject constructor(
     val saveButtonEnabled: LiveData<Boolean> = MutableLiveData(true)
 
     private var initialized: Boolean = false
+    private var excludedTypesRevealed: Boolean = false
     private var viewDataCache: List<TypesSelectionCacheHolder> = emptyList()
 
     private var dataIdsSelected: List<Long> = emptyList()
@@ -149,6 +150,13 @@ class TypesSelectionViewModel @Inject constructor(
         onTagValueModeSelected(data, setNow = false)
     }
 
+    fun onShowExcludedTypesClick() {
+        excludedTypesRevealed = true
+        initialized = false
+        viewState.set(loadViewState())
+        updateViewData()
+    }
+
     fun onShowAllClick() {
         dataIdsSelected = viewDataCache.map(TypesSelectionCacheHolder::id)
         updateViewData()
@@ -221,6 +229,9 @@ class TypesSelectionViewModel @Inject constructor(
             title = extra.title,
             subtitle = extra.subtitle,
             isButtonsVisible = extra.isMultiSelectAvailable,
+            showExcludedTypesButtonText = extra.showExcludedTypesButtonText
+                .takeUnless { excludedTypesRevealed }
+                .orEmpty(),
         )
     }
 
@@ -231,6 +242,7 @@ class TypesSelectionViewModel @Inject constructor(
 
     private suspend fun loadViewData(): List<ViewHolderType> {
         val types = recordTypeInteractor.getAll()
+        val extra = if (excludedTypesRevealed) extra.copy(excludedTypeIds = emptyList()) else extra
 
         if (!initialized) {
             viewDataCache = typesSelectionViewDataInteractor.loadCache(

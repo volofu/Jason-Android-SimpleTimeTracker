@@ -20,6 +20,8 @@ data class TypesSelectionDialogParams(
     val showHints: Boolean,
     val allowTagValueSelection: Boolean,
     val allowSelectTagValueOnStart: Boolean = false,
+    // Not empty - shows a button with this text that reveals types hidden by excludedTypeIds.
+    val showExcludedTypesButtonText: String = "",
 ) : Parcelable, ScreenParams {
 
     sealed interface Type : Parcelable {

@@ -23,6 +23,7 @@ data class PomodoroInfo(
     val workTotalTodayMs: Long,
     val workTotalWeekMs: Long,
     val includeUnutilized: Boolean,
+    val stats: PomodoroStats,
     // How much of the working hours has already passed.
     val dayWindowMs: Long,
     val weekWindowMs: Long,

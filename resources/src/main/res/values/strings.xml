@@ -702,6 +702,15 @@ Example:<br/>
     <string name="pomodoro_info_elapsed">Elapsed</string>
     <string name="pomodoro_info_paused_comment">Paused comment: %1$s</string>
     <string name="pomodoro_info_include_unutilized">Include unused work time in the chart</string>
+    <string name="pomodoro_break_select_title">Time for a break</string>
+    <string name="pomodoro_break_show_all">Show all activities</string>
+    <string name="pomodoro_info_expand">Show all statistics</string>
+    <string name="pomodoro_info_collapse">Back</string>
+    <string name="pomodoro_info_pomodoros">Pomodoros completed</string>
+    <string name="pomodoro_info_short_breaks">Short breaks taken</string>
+    <string name="pomodoro_info_long_breaks">Long breaks taken</string>
+    <string name="pomodoro_info_break_skipped">Break time skipped</string>
+    <string name="pomodoro_info_break_skipped_ratio">Skipped of allotted break time</string>
     <string name="pomodoro_settings_work_activities">Work activities</string>
     <string name="pomodoro_settings_work_categories">Work categories</string>
     <string name="pomodoro_settings_work_none">Not set, all activities</string>

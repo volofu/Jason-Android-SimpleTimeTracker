@@ -272,6 +272,18 @@ class PrefsRepoImpl @Inject constructor(
         KEY_POMODORO_COUNT_UP_DURING_WORK_HOURS, true,
     )
 
+    override var pomodoroCycleLog: String by prefs.delegate(
+        KEY_POMODORO_CYCLE_LOG, "",
+    )
+
+    override var pomodoroLoggedVirtualTime: Long by prefs.delegate(
+        KEY_POMODORO_LOGGED_VIRTUAL_TIME, 0,
+    )
+
+    override var pomodoroBreakCategoryId: Long by prefs.delegate(
+        KEY_POMODORO_BREAK_CATEGORY_ID, 0,
+    )
+
     override var pomodoroEntryStartedTimestamp: Long by prefs.delegate(
         KEY_POMODORO_ENTRY_STARTED_TIMESTAMP, 0,
     )
@@ -865,6 +877,7 @@ class PrefsRepoImpl @Inject constructor(
         const val KEY_POMODORO_WORK_CATEGORIES = "pomodoroWorkCategories"
         const val KEY_POMODORO_PIE_INCLUDE_UNUTILIZED = "pomodoroPieIncludeUnutilized"
         const val KEY_POMODORO_COUNT_UP_DURING_WORK_HOURS = "pomodoroCountUpDuringWorkHours"
+        const val KEY_POMODORO_BREAK_CATEGORY_ID = "pomodoroBreakCategoryId"
         const val KEY_ALLOW_MULTIPLE_ACTIVITY_FILTERS = "allowMultipleActivityFilters"
         const val KEY_SHOW_CATEGORIES_AS_PREDEFINED_FILTERS = "showCategoriesAsPredefinedFilters"
         const val KEY_SELECTED_PREDEFINED_FILTERS = "selectedPredefinedFilters"
@@ -944,6 +957,8 @@ class PrefsRepoImpl @Inject constructor(
         private const val KEY_POMODORO_MODE_PAUSED_TIMESTAMP = "pomodoroModePausedTimestamp"
         private const val KEY_POMODORO_ENTRY_STARTED_TIMESTAMP = "pomodoroEntryStartedTimestamp"
         private const val KEY_POMODORO_PAUSE_TOTAL = "pomodoroPauseTotal"
+        private const val KEY_POMODORO_CYCLE_LOG = "pomodoroCycleLog"
+        private const val KEY_POMODORO_LOGGED_VIRTUAL_TIME = "pomodoroLoggedVirtualTime"
         private const val KEY_POMODORO_RESUME_TYPE_ID = "pomodoroResumeTypeId"
         private const val KEY_POMODORO_RESUME_COMMENT = "pomodoroResumeComment"
         private const val KEY_POMODORO_RESUME_TAGS = "pomodoroResumeTags"

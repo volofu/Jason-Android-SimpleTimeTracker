@@ -10,6 +10,7 @@ class PomodoroRestartCycleInteractor @Inject constructor(
     private val getPomodoroStateInteractor: GetPomodoroStateInteractor,
     private val getPomodoroSettingsInteractor: GetPomodoroSettingsInteractor,
     private val pomodoroCycleNotificationInteractor: PomodoroCycleNotificationInteractor,
+    private val pomodoroCycleLogInteractor: PomodoroCycleLogInteractor,
 ) {
 
     suspend fun execute() {
@@ -23,8 +24,10 @@ class PomodoroRestartCycleInteractor @Inject constructor(
             settings = getPomodoroSettingsInteractor.execute(),
         )
 
+        pomodoroCycleLogInteractor.sync(cutShort = true)
         val newTimeStarted = timeStartedMs + result.currentCycleDurationMs
         prefsInteractor.setPomodoroModeStartedTimestampMs(newTimeStarted)
+        pomodoroCycleLogInteractor.onTimelineChanged()
 
         pomodoroCycleNotificationInteractor.checkAndReschedule()
     }

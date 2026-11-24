@@ -7,6 +7,7 @@ class PomodoroPauseInteractor @Inject constructor(
     private val prefsInteractor: PrefsInteractor,
     private val pomodoroCycleNotificationInteractor: PomodoroCycleNotificationInteractor,
     private val getPomodoroStateInteractor: GetPomodoroStateInteractor,
+    private val pomodoroCycleLogInteractor: PomodoroCycleLogInteractor,
 ) {
 
     suspend fun pause() {
@@ -14,6 +15,7 @@ class PomodoroPauseInteractor @Inject constructor(
         val state = getPomodoroStateInteractor.execute()
         if (state !is GetPomodoroStateInteractor.State.Running) return
 
+        pomodoroCycleLogInteractor.sync()
         val current = System.currentTimeMillis()
         prefsInteractor.setPomodoroModePausedTimestampMs(current)
         pomodoroCycleNotificationInteractor.cancel()
